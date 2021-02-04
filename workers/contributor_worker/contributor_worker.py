@@ -56,50 +56,21 @@ class ContributorWorker(Worker):
 
         # Get all distinct combinations of emails and names by querying the repo's commits
         userSQL = s.sql.text("""
-            SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email, 
-                cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
-                gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
-            FROM commits, contributors
-            WHERE repo_id = :repo_id
-            AND contributors.cntrb_full_name = cmt_author_name
-                UNION
-            SELECT cmt_author_name AS commit_name, cntrb_id, cmt_author_raw_email AS commit_email, cntrb_email, 
-                cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
-                gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
-            FROM commits, contributors
-            WHERE repo_id = :repo_id
-            AND contributors.cntrb_email = cmt_author_raw_email
-                UNION
-            SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email, 
-                cntrb_email, cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
-                gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
-            FROM commits, contributors
-            WHERE repo_id = :repo_id
-            AND contributors.cntrb_full_name = cmt_committer_name
-                UNION
-            SELECT cmt_committer_name AS commit_name, cntrb_id, cmt_committer_raw_email AS commit_email, 
-                cntrb_email, cntrb_full_name, cntrb_login, cntrb_canonical, 
-                cntrb_company, cntrb_created_at::timestamp, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, 
-                cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, gh_user_id, 
-                gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, 
-                gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, 
-                gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, cntrb_last_used
-            FROM commits, contributors
-            WHERE repo_id = :repo_id
-            AND contributors.cntrb_email = cmt_committer_raw_email
-                ORDER BY cntrb_id
+            SELECT contributors.*, commits.cmt_author_name AS commit_name, commits.cmt_author_raw_email AS commit_email
+            FROM augur_data.contributors
+            CROSS JOIN LATERAL (
+               SELECT commits.* 
+               FROM augur_data.commits
+               WHERE repo_id = :repo_id AND (
+                    cntrb_full_name = cmt_author_name
+                    OR cntrb_email = cmt_author_raw_email
+                    OR cntrb_full_name = cmt_committer_name
+                    OR cntrb_email = cmt_committer_raw_email
+                )
+               ORDER BY cmt_author_name, cmt_author_raw_email, cmt_committer_name, cmt_committer_raw_email DESC NULLS LAST
+               LIMIT  1
+               ) commits
+            ORDER BY cntrb_id
         """)
 
         commit_cntrbs = json.loads(pd.read_sql(userSQL, self.db, \
