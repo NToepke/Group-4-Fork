@@ -255,16 +255,55 @@ class ClusteringWorker(Worker):
 		logging.info("pickle dump")
 
 		#insert topic list into database
-		topic_id = 1
-		for topic in topic_list:
-			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
-				record = {
-				  'topic_id': int(topic_id),
-				  'word': feature_names[i]
-				  }
-				result = self.db.execute(self.topic_words_table.insert().values(record))
+
+	    topic_word_insert = []
+	    #cntrb_ids_idx = pd.Index(cntrb_ids, name=contributors)
+
+	    for topic in len(topic_list):
+
+	        # repo_it = source_cntrb_repos.index(['id'])
+	        # the_event_id_idx = repo_it.index() 
+	        # try:
+	        #     the_event_id_idx = source_cntrb_repos(event_id)
+	        # except ValueError: 
+	        #     continue
+	        #if current_ids['event_id'] == source_cntrb_repos['id']:
+	        #if int(cntrb_repo['id']) in current_ids.loc[~['event_id'].astype.str.isdigit(), 'event_id'].tolist() 
+	        # pd.to_numeric(current_ids['event_id']):
+	            #continue
+	        for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
+		        topic_word_insert.append(
+		            {
+		            "topic_id": topic['topic'],
+		            "word": feature_names[i]
+		            "tool_source": self.tool_source,
+		            "tool_version": self.tool_version,
+		            "data_source": self.data_source
+		        })
+
+				topic_id+=1
+	
+		    if len(source_cntrb_repos['insert']) > 0:
+
+				cntrb_repo_insert_result, cntrb_repo_update_result = self.bulk_insert(self.contributor_repo_table,
+					unique_columns='topic_words_id', insert=topic_words_insert)result = self.db.execute(self.topic_words_table.insert()
+				
 				logging.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
-			topic_id+=1
+
+
+
+
+
+		# topic_id = 1
+		# for topic in len(topic_list):
+		# 	for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
+		# 		record = {
+		# 		  'topic_id': int(topic_id),
+		# 		  'word': feature_names[i]
+		# 		  }
+		# 		result = self.db.execute(self.topic_words_table.insert().values(record))
+		# 		logging.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
+		# 	topic_id+=1
 		
 		#insert topic list into database
 		
