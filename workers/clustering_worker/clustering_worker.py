@@ -3,8 +3,8 @@ from datetime import datetime
 from multiprocessing import Process, Queue
 import pandas as pd
 import sqlalchemy as s
+from sqlalchemy.schema import Sequence
 from workers.worker_base import Worker
-
 import seaborn as sns
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -254,6 +254,16 @@ class ClusteringWorker(Worker):
 		pickle.dump(lda_model, open("lda_model",'wb'))
 		logging.info("pickle dump")
 
+		## Advance Sequence SQL
+		
+		# key_sequence_words_sql = s.sql.text(
+  #                           """
+		# 		SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
+		# 		"""
+  #                               )
+
+		# twid = self.db.execute(key_sequence_words_sql)
+		# self.logger.info("twid variable is: {}".format(twid)) 
 		#insert topic list into database
 ######################################################################################
 	   #  topic_word_insert = []
@@ -295,14 +305,24 @@ class ClusteringWorker(Worker):
 
 
 		topic_id = 1
+<<<<<<< HEAD
 		for topic in len(topic_list):
+=======
+		for topic in topic_list:
+			#twid = self.get_max_id('topic_words', 'topic_words_id') + 1
+			self.logger.info("twid variable is: {}".format(twid))
+>>>>>>> 0024f4e92b2171abe71d6de77001024df2998239
 			for i in topic.argsort()[:-self.num_words_per_topic-1:-1]:
+				#twid+=1
+				#self.logger.info("in loop incremented twid variable is: {}".format(twid))
+				#self.logger.info("twid variable is: {}".format(twid))
 				record = {
+				  #'topic_words_id': twid,
 				  'topic_id': int(topic_id),
 				  'word': feature_names[i]
 				  }
 				result = self.db.execute(self.topic_words_table.insert().values(record))
-				logging.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
+				self.logger.info("Primary key inserted into the topic_words table: {}".format(result.inserted_primary_key))
 			topic_id+=1
 			
 	    if len(source_cntrb_repos['insert']) > 0:
