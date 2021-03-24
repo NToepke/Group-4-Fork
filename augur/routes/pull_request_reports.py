@@ -1038,16 +1038,124 @@ def create_routes(server):
         end_date = str(request.args.get('end_date', "{}-{}-{}".format(now.year, now.month, now.day)))
         return_json = request.args.get('return_json', "false")
 
-        #dict of df types, and their locaiton in the tuple that the function pull_request_data_collection returns
-        df_type = {"pr_all": 0, "pr_open": 1, "pr_closed": 2, "pr_merged": 3, "pr_not_merged": 4, "pr_slow20_all": 5,
-                "pr_slow20_open": 6, "pr_slow20_closed": 7, "pr_slow20_merged": 8, "pr_slow20_not_merged": 9}
+        pr_query = salc.sql.text(f"""
+                    SELECT
+                        repo.repo_id AS repo_id,
+                        pull_requests.pr_src_id AS pr_src_id,
+                        repo.repo_name AS repo_name,
+                        repo_groups.rg_name AS repo_group,
+                        pull_requests.pr_src_state,
+                        pull_requests.pr_merged_at,
+                        pull_requests.pr_created_at AS pr_created_at,
+                        pull_requests.pr_closed_at AS pr_closed_at,
+                        date_part( 'year', pr_created_at :: DATE ) AS CREATED_YEAR,
+                        date_part( 'month', pr_created_at :: DATE ) AS CREATED_MONTH,
+                        date_part( 'year', pr_closed_at :: DATE ) AS CLOSED_YEAR,
+                        date_part( 'month', pr_closed_at :: DATE ) AS CLOSED_MONTH,
+                        ( EXTRACT ( EPOCH FROM pull_requests.pr_closed_at ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 3600 AS hours_to_close,
+                        ( EXTRACT ( EPOCH FROM pull_requests.pr_closed_at ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 86400 AS days_to_close, 
+                        ( EXTRACT ( EPOCH FROM first_response_time ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 3600 AS hours_to_first_response,
+                        ( EXTRACT ( EPOCH FROM first_response_time ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 86400 AS days_to_first_response, 
+                        ( EXTRACT ( EPOCH FROM last_response_time ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 3600 AS hours_to_last_response,
+                        ( EXTRACT ( EPOCH FROM last_response_time ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 86400 AS days_to_last_response, 
+                        first_response_time,
+                        last_response_time,
+                        average_time_between_responses,
+                        merged_count
+                    FROM
+                        repo,
+                        repo_groups,
+                        pull_requests LEFT OUTER JOIN ( 
+                            SELECT pull_requests.pull_request_id,
+                            count(*) FILTER (WHERE action = 'merged') AS merged_count,
+                            MIN(message.msg_timestamp) AS first_response_time,
+                            MAX(message.msg_timestamp) AS last_response_time,
+                            (MAX(message.msg_timestamp) - MIN(message.msg_timestamp)) / COUNT(DISTINCT message.msg_timestamp) AS average_time_between_responses
+                            FROM pull_request_events, pull_requests, repo, pull_request_message_ref, message
+                            WHERE repo.repo_id = {repo_id}
+                            AND repo.repo_id = pull_requests.repo_id
+                            AND pull_requests.pull_request_id = pull_request_events.pull_request_id
+                            AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
+                            AND pull_request_message_ref.msg_id = message.msg_id
+                            GROUP BY pull_requests.pull_request_id
+                        ) response_times
+                        ON pull_requests.pull_request_id = response_times.pull_request_id  
+                    WHERE 
+                        repo.repo_group_id = repo_groups.repo_group_id 
+                        AND repo.repo_id = pull_requests.repo_id 
+                        AND repo.repo_id = {repo_id}
+                    ORDER BY
+                       merged_count ASC
+                        """)
+        pr_all = pd.read_sql(pr_query, server.augur_app.database)
 
-        df_tuple = pull_request_data_collection(repo_id=repo_id, start_date=start_date, end_date=end_date)
+        pr_all[['created_year', 'closed_year']] = pr_all[['created_year', 'closed_year']].fillna(-1).astype(int).astype(str)
 
-        pr_closed = df_tuple[df_type["pr_closed"]]
-        pr_slow20_not_merged = df_tuple[df_type["pr_slow20_not_merged"]]
-        pr_slow20_merged = df_tuple[df_type["pr_slow20_merged"]]
-        pr_all = df_tuple[df_type["pr_all"]]
+        try:
+            pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
+            pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
+        except: 
+            return Response(response="There is not enough msg data for this repo, in the database you are accessing",
+                mimetype='application/json',
+                status=200) 
+
+        start_date = pd.to_datetime(start_date)
+        # end_date = pd.to_datetime('2020-02-01 09:00:00')
+        end_date = pd.to_datetime(end_date)
+        pr_all = pr_all[(pr_all['pr_created_at'] > start_date) & (pr_all['pr_closed_at'] < end_date)]
+
+        pr_all['created_year'] = pr_all['created_year'].map(int)
+        pr_all['created_month'] = pr_all['created_month'].map(int)
+        pr_all['created_month'] = pr_all['created_month'].map(lambda x: '{0:0>2}'.format(x))
+        pr_all['created_yearmonth'] = pd.to_datetime(pr_all['created_year'].map(str) + '-' + pr_all['created_month'].map(str) + '-01')
+
+        # getting the number of days of (today - created at) for the PRs that are still open
+        # and putting this in the days_to_close column
+
+        # get timedeltas of creation time to todays date/time
+        days_to_close_open_pr = datetime.datetime.now() - pr_all.loc[pr_all['pr_src_state'] == 'open']['pr_created_at']
+
+        # get num days from above timedelta
+        days_to_close_open_pr = days_to_close_open_pr.apply(lambda x: x.days).astype(int)
+
+        # for only OPEN pr's, set the days_to_close column equal to above dataframe
+        pr_all.loc[pr_all['pr_src_state'] == 'open'] = pr_all.loc[pr_all['pr_src_state'] == 'open'].assign(days_to_close=days_to_close_open_pr)
+
+        pr_all.loc[pr_all['pr_src_state'] == 'open'].head()
+
+        # initiate column by setting all null datetimes
+        pr_all['closed_yearmonth'] = pd.to_datetime(np.nan)
+
+        # Fill column with prettified string of year/month closed that looks like: 2019-07-01
+        pr_all.loc[pr_all['pr_src_state'] == 'closed'] = pr_all.loc[pr_all['pr_src_state'] == 'closed'].assign(
+            closed_yearmonth = pd.to_datetime(pr_all.loc[pr_all['pr_src_state'] == 'closed']['closed_year'].astype(int
+                ).map(str) + '-' + pr_all.loc[pr_all['pr_src_state'] == 'closed']['closed_month'].astype(int).map(str) + '-01'))
+
+        """ Merged flag """
+        if 'pr_merged_at' in pr_all.columns.values:
+            pr_all['pr_merged_at'] = pr_all['pr_merged_at'].fillna(0)
+            pr_all['merged_flag'] = 'Not Merged / Rejected'
+            pr_all['merged_flag'].loc[pr_all['pr_merged_at'] != 0] = 'Merged / Accepted'
+            pr_all['merged_flag'].loc[pr_all['pr_src_state'] == 'open'] = 'Still Open'
+            del pr_all['pr_merged_at']
+
+        # Isolate the different state PRs for now
+        pr_closed = pr_all.loc[pr_all['pr_src_state'] == 'closed']
+        pr_merged = pr_all.loc[pr_all['merged_flag'] == 'Merged / Accepted']
+        pr_not_merged = pr_all.loc[pr_all['merged_flag'] == 'Not Merged / Rejected']
+
+        # Filtering the 80th percentile slowest PRs
+        def filter_20_per_slowest(input_df):
+            pr_slow20_filtered = pd.DataFrame()
+            pr_slow20_x = pd.DataFrame()
+            pr_slow20_filtered = input_df.copy()
+            pr_slow20_filtered['percentile_rank_local'] = pr_slow20_filtered.days_to_close.rank(pct=True)
+            pr_slow20_filtered = pr_slow20_filtered.query('percentile_rank_local >= .8', )
+
+            return pr_slow20_filtered
+
+        pr_slow20_merged = filter_20_per_slowest(pr_merged)
+        pr_slow20_not_merged = filter_20_per_slowest(pr_not_merged)
 
         #only test pr_all because it encompasses the other dfs
         if(len(pr_all) == 0):
@@ -1056,6 +1164,7 @@ def create_routes(server):
                 status=200)
 
 
+        #used for generating titles with repo_name
         repo_dict = {repo_id : pr_closed.loc[pr_closed['repo_id'] == repo_id].iloc[0]['repo_name']}  
 
         time_unit='Days'
@@ -1129,7 +1238,7 @@ def create_routes(server):
         p1.yaxis.major_label_text_font_size = "16px"
         p1.xaxis.major_label_orientation = 45.0
         
-        p1.y_range = Range1d(0,  max(possible_maximums)*1.15)
+        p1.y_range = Range1d(0, max(possible_maximums)*1.15)
         
         plot = p1
         
