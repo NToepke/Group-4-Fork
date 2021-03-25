@@ -180,12 +180,6 @@ def create_routes(server):
 
         # Get days for average_time_between_responses time delta
 
-
-
-        ## for pr_all['average_time_between_responses']:
-        pr_all['average_days_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days).astype(float)
-        pr_all['average_hours_between_responses'] = pr_all['average_time_between_responses'].map(lambda x: x.days * 24).astype(float)
-
         start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime('2020-02-01 09:00:00')
         end_date = pd.to_datetime(end_date)
@@ -318,7 +312,7 @@ def create_routes(server):
         return color_dict(RGB_list)
 
     @server.app.route('/{}/pull_request_reports/average_commits_per_PR/'.format(server.api_version), methods=["GET"])
-    def average_commits_per_PR(return_json=True):
+    def average_commits_per_PR():
 
         now = datetime.datetime.now()
 
@@ -453,7 +447,7 @@ def create_routes(server):
         return send_file(filename)
 
     @server.app.route('/{}/pull_request_reports/average_comments_per_PR/'.format(server.api_version), methods=["GET"])
-    def average_comments_per_PR(return_json=True):
+    def average_comments_per_PR():
 
         now = datetime.datetime.now()
 
