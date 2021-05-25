@@ -350,7 +350,8 @@ def create_routes(server):
 
         row_1, row_2, row_3, row_4 = [], [], [], []
 
-       
+        input_df = input_df[['cntrb_id', 'created_at', 'rank', 'yearmonth', 'new_contributors', 'quarter']]
+
         for rank in ranks:
             for contributor_type in contributor_types:
 
@@ -590,6 +591,8 @@ def create_routes(server):
 
         row_1, row_2, row_3, row_4 = [], [], [], []
 
+        input_df = input_df[['cntrb_id', 'created_at', 'rank', 'yearmonth', 'new_contributors', 'quarter', 'action']]
+
         for rank in ranks:
             for contributor_type in contributor_types:
                 #do not display these visualizations since drive-by's do not have second contributions, and the second contribution of a repeat contributor is the same thing as the all the second time contributors
@@ -809,7 +812,6 @@ def create_routes(server):
         grid = gridplot([row_1, row_2, row_3, row_4])
 
         if return_json == "true":
-            print("Made it")
 
             var = Response(response=json.dumps(json_item(grid, "new_contributors_stacked_bar")),
                 mimetype='application/json',
@@ -843,10 +845,11 @@ def create_routes(server):
                 mimetype='application/json',
                 status=200)
         
-        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
 
         #create a copy of contributor dataframe
-        driver_df = input_df.copy()
+        driver_df = input_df.copy()[['cntrb_id', 'created_at', 'rank', 'yearmonth', 'new_contributors']] 
+
         
         #remove first time contributors before begin date, along with their second contribution
         mask = (driver_df['yearmonth'] < start_date)
@@ -1023,7 +1026,7 @@ def create_routes(server):
         repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}    
 
         #create a copy of contributor dataframe
-        driver_df = input_df.copy()
+        driver_df = input_df.copy()[['cntrb_id', 'created_at', 'rank', 'yearmonth', 'new_contributors', 'quarter']]
 
         #remove first time contributors before begin date, along with their second contribution
         mask = (driver_df['yearmonth'] < start_date)
