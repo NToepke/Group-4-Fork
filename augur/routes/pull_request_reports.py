@@ -340,29 +340,33 @@ def create_routes(server):
 
         y_axis = 'num_commits'
         group_by_bars = 'merged_flag'
-        description = 'All'  
+        description = 'All'
 
         # filter out unneeded columns for easier debugging
         input_df = input_df[['repo_id', 'repo_name', 'closed_year', 'closed_yearmonth', group_by_bars, 'commit_count']]
 
         # print(input_df.to_string())
 
-        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}   
-       
-        driver_df = input_df.copy() # deep copy input data so we do not change the external dataframe 
+        repo_dict = {repo_id : input_df.loc[input_df['repo_id'] == repo_id].iloc[0]['repo_name']}
+
+        driver_df = input_df.copy() # deep copy input data so we do not change the external dataframe
+
+        driver_df = driver_df.dropna(subset=['commit_count'])
+
+        print(driver_df.to_string())
 
         # Change closed year to int so that doesn't display as 2019.0 for example
         driver_df['closed_year'] = driver_df['closed_year'].astype(int).astype(str)
 
         # defaults to year
         x_axis = 'closed_year'
-        x_groups = sorted(list(driver_df[x_axis].unique())) 
+        x_groups = sorted(list(driver_df[x_axis].unique()))
 
+        #if the group_by is specified as month then override past year values
         if group_by == 'month':
             x_axis = "closed_yearmonth"
             x_groups = np.unique(np.datetime_as_string(input_df[x_axis], unit = 'M'))
 
-        print(x_axis)
         print(x_groups)
 
         # inner groups on x_axis they are merged and not_merged
