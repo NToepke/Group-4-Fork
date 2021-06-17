@@ -28,6 +28,51 @@ from bokeh.transform import dodge, factor_cmap, transform
 
 def create_routes(server):
 
+    def quarters(month, year):
+        if month >= 1 and month <=3:
+            return '01' + '/' + year
+        elif month >=4 and month <=6:
+            return '04' + '/' + year
+        elif month >= 5 and month <=9:
+            return '07' + '/' + year
+        elif month >= 10 and month <= 12:
+            return '10' + '/' + year
+
+    def months_data_collection(start_date, end_date):
+
+        months_df = pd.DataFrame()
+
+        #months_query makes a df of years and months, this is used to fill the months with no data in the visualizaitons
+        months_query = salc.sql.text(f"""
+              SELECT
+                        *
+                    FROM
+                    (
+                    SELECT
+                        date_part( 'year', created_month :: DATE ) AS year,
+                        date_part( 'month', created_month :: DATE ) AS MONTH
+                    FROM
+                        (SELECT * FROM ( SELECT created_month :: DATE FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x
+                    ) y
+        """)
+        months_df = pd.read_sql(months_query, server.augur_app.database)
+
+        #add yearmonths to months_df
+        months_df[['year','month']] = months_df[['year','month']].astype(float).astype(int).astype(str)
+        months_df['yearmonth'] = months_df['month'] + '/' + months_df['year']
+        months_df['yearmonth'] = pd.to_datetime(months_df['yearmonth'])
+
+        #filter months_df with start_date and end_date, the contributor df is filtered in the visualizations
+        months_df = months_df.set_index(months_df['yearmonth'])
+        months_df = months_df.loc[start_date : end_date].reset_index(drop = True)
+
+        #add quarters to months dataframe
+        months_df['month'] = months_df['month'].astype(int)
+        months_df['quarter'] = months_df.apply(lambda x: quarters(x['month'], x['year']), axis=1)
+        months_df['quarter'] = pd.to_datetime(months_df['quarter'])
+
+        return months_df
+
     def pull_request_data_collection(repo_id, start_date, end_date):
 
         pr_query = salc.sql.text(f"""
