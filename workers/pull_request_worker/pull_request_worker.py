@@ -374,8 +374,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.register_task_completion(self.task_info, self.repo_id, 'pull_request_commits')
 
     def _get_pk_source_prs(self):
-        
-        #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo. 
+
+        #self.owner and self.repo are both defined in the worker base's collect method using the url of the github repo.
         pr_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/pulls?state=all&"
             "direction=asc&per_page=100&page={}"
@@ -412,8 +412,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         'augur': ['gh_node_id']
                     }
                 }, prefix='user.'
-            )            
-            
+            )
+
 
             prs_insert = [
             {
@@ -466,7 +466,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                     self.pull_requests_table,
                     update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
                     insert=prs_insert, update_columns=action_map['update']['augur']
-                )   
+                )
 
                 source_data = inc_source_prs['insert'] + inc_source_prs['update']
 
@@ -488,7 +488,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
                 gh_merge_fields, augur_merge_fields)
             return
-            
+
 
         #paginate endpoint with stagger enabled so that the above method can insert every 500
         source_prs = self.paginate_endpoint(
@@ -496,13 +496,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             where_clause=self.pull_requests_table.c.repo_id == self.repo_id, stagger=True, insertion_method=pk_source_increment_insert
         )
 
-        #Use the increment insert method in order to do the 
+        #Use the increment insert method in order to do the
         #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
         pk_source_increment_insert(source_prs,pr_action_map)
-        
+
         pk_source_prs = self.pk_source_prs
 
-        #This attribute is only needed because paginate endpoint needs to 
+        #This attribute is only needed because paginate endpoint needs to
         #send this data to the child class and this is the easiset way to do that.
         self.pk_source_prs = []
 
@@ -535,6 +535,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
 
     def pull_request_comments_model(self):
+
+        self.logger.info("Made it to the comments model")
 
         comments_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/comments?per_page=100"

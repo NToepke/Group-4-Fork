@@ -181,6 +181,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
     def issue_comments_model(self, pk_source_issues):
 
+        self.logger.info("Made it to issue_comments_model")
+
         comments_url = (
             f"https://api.github.com/repos/{self.owner}/{self.repo}"
             "/issues/comments?per_page=100&page={}"
@@ -423,7 +425,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'augur': ['issue_assignee_src_id']
             }
         }
-        
+
         table_values_issue_assignees = self.db.execute(
             s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
         ).fetchall()
