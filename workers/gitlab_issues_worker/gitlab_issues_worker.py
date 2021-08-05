@@ -63,9 +63,9 @@ class GitLabIssuesWorker(WorkerGitInterfaceable):
         duplicate_col_map = {'gh_issue_id': 'id'}
 
         #test find_id_from_login
-        sean_cntrb_id = find_id_from_login("sgoggins")
-        isaac_cntrb_id = find_id_from_login("IsaacMilarky")
-        andrew_cntrb_id = find_id_from_login("ABrain7710")
+        sean_cntrb_id = self.find_id_from_login("sgoggins")
+        isaac_cntrb_id = self.find_id_from_login("IsaacMilarky")
+        andrew_cntrb_id = self.find_id_from_login("ABrain7710")
 
         self.logger.info(f"Sean: {sean_cntrb_id}    Isaac: {isaac_cntrb_id}     Andrew: {andrew_cntrb_id}")
 
