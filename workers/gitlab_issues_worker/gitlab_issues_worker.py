@@ -62,6 +62,13 @@ class GitLabIssuesWorker(WorkerGitInterfaceable):
         update_col_map = {'issue_state': 'state'}
         duplicate_col_map = {'gh_issue_id': 'id'}
 
+        #test find_id_from_login
+        sean_cntrb_id = find_id_from_login("sgoggins")
+        isaac_cntrb_id = find_id_from_login("IsaacMilarky")
+        andrew_cntrb_id = find_id_from_login("ABrain7710")
+
+        self.logger.info(f"Sean: {sean_cntrb_id}    Isaac: {isaac_cntrb_id}     Andrew: {andrew_cntrb_id}")
+
         #list to hold issues needing insertion
         issues = self.paginate(gitlab_issues_url, duplicate_col_map, update_col_map, table, table_pkey,
             'WHERE repo_id = {}'.format(repo_id), platform="gitlab")
