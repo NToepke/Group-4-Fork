@@ -172,8 +172,10 @@ class WorkerGitInterfaceable(Worker):
             }
         result = self.db.execute(self.contributors_table.insert().values(cntrb))
         self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
+        self.logger.info(f"Result: {result}")
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
+        self.logger.info(f"Inserted contributor: {cntrb}")
         self.logger.info(f"Inserted contributor: {cntrb['cntrb_login']}\n")
 
         return self.find_id_from_login(login, platform)
