@@ -97,6 +97,8 @@ class WorkerGitInterfaceable(Worker):
         self.update_rate_limit(r)
         contributor = r.json()
 
+        self.logger.info(f"Contributor returned: {contributor}")
+
 				# Used primarily for the Gitlab block below
         company = None
         location = None
@@ -172,7 +174,6 @@ class WorkerGitInterfaceable(Worker):
             }
         result = self.db.execute(self.contributors_table.insert().values(cntrb))
         self.logger.info("Primary key inserted into the contributors table: " + str(result.inserted_primary_key))
-        self.logger.info(f"Result: {result}")
         self.results_counter += 1
         self.cntrb_id_inc = int(result.inserted_primary_key[0])
         self.logger.info(f"Inserted contributor: {cntrb}")
