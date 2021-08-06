@@ -72,6 +72,8 @@ class WorkerGitInterfaceable(Worker):
             AND LOWER(data_source) = '{} api'
             """.format(login, platform))
 
+        self.logger.info(f"Headers: {self.headers}")
+
         rs = pd.read_sql(idSQL, self.db, params={})
         data_list = [list(row) for row in rs.itertuples(index=False)]
         try:
@@ -86,13 +88,28 @@ class WorkerGitInterfaceable(Worker):
         self.logger.info("Hitting endpoint: {} ...\n".format(cntrb_url))
 
 				# Possible infinite loop if this request never succeeds?
-        while True:
+        # while True:
+        #     try:
+        #         r = requests.get(url=cntrb_url, headers=self.headers)
+        #         break
+        #     except TimeoutError as e:
+        #         self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
+        #         time.sleep(30)
+
+        attempts = 0
+        try:
+          while attempts < 10:
             try:
-                r = requests.get(url=cntrb_url, headers=self.headers)
-                break
-            except TimeoutError as e:
-                self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
-                time.sleep(30)
+              self.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
+              r = requests.get(url=cntrb_url , headers=self.headers)
+              break
+            except TimeoutError:
+              self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+              time.sleep(10)
+
+            attempts += 1
+        except Exception as e:
+          raise e
 
         self.update_rate_limit(r)
         contributor = r.json()
@@ -1006,13 +1023,10 @@ class WorkerGitInterfaceable(Worker):
             else entry_info['given']['git_url']
         )
 
+        owner, name = self.get_owner_repo(gitlab_url)
+
         self.logger.info("Querying contributors with given entry info: " + str(entry_info) + "\n")
 
-        path = urlparse(gitlab_url)
-        split = path[2].split('/')
-
-        owner = split[1]
-        name = split[2]
 
         # Handles git url case by removing the extension
         if ".git" in name:
@@ -1020,8 +1034,8 @@ class WorkerGitInterfaceable(Worker):
 
         url_encoded_format = quote(owner + '/' + name, safe='')
 
-        table = 'contributors'
-        table_pkey = 'cntrb_id'
+        # table = 'contributors'
+        # table_pkey = 'cntrb_id'
         ### Here we are adding gitlab user information from the API
         ### Following Gabe's rework of the contributor worker.
 
@@ -1031,11 +1045,21 @@ class WorkerGitInterfaceable(Worker):
         ### We don't need to update right now, so commenting out.
         ### TODO: SOLVE LOGIC.
         # update_col_map = {'cntrb_email': 'email'}
-        update_col_map = {}
-        duplicate_col_map = {'gl_username': 'username'}
+        # update_col_map = {'cntrb_email': 'email'}
+        # duplicate_col_map = {'gl_username': 'username'}
+
+        cntrb_action_map = {
+            'insert': {
+                'source': ['name'],
+                'augur': ['gl_username']
+            }
+        }
+        full_url = "https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}"
 
         # list to hold contributors needing insertion or update
-        contributors = self.paginate("https://gitlab.com/api/v4/projects/" + url_encoded_format + "/repository/contributors?per_page=100&page={}", duplicate_col_map, update_col_map, table, table_pkey, platform='gitlab')
+        all_contributors = self.paginate_endpoint(full_url, cntrb_action_map, self.contributors_table, platform='gitlab')
+
+        contributors = all_contributors['insert']
 
         for repo_contributor in contributors:
             try:
@@ -1485,6 +1509,8 @@ class WorkerGitInterfaceable(Worker):
                 break
 
             all_data += page_data
+
+            self.logger.info(f"Page_data: {page_data}")
 
             if not forward_pagination:
 
