@@ -77,16 +77,16 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.logger.info("There are no issues for this repository.\n")
                 self.register_task_completion(self.task_info, self.repo_id, 'issues')
                 return False
-            
+
             def is_valid_pr_block(issue):
                 return (
                     'pull_request' in issue and issue['pull_request']
                     and isinstance(issue['pull_request'], dict) and 'url' in issue['pull_request']
                 )
-            
+
             #This is sending empty data to enrich_cntrb_id, fix with check.
             #The problem happens when ['insert'] is empty but ['all'] is not.
-            if len(inc_source_issues['insert']) > 0:  
+            if len(inc_source_issues['insert']) > 0:
                 inc_source_issues['insert'] = self.enrich_cntrb_id(
                     inc_source_issues['insert'], 'user.login', action_map_additions={
                         'insert': {
@@ -97,7 +97,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
-            
+
             issues_insert = [
                 {
                     'repo_id': self.repo_id,
@@ -146,7 +146,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 )
 
                 source_data = inc_source_issues['insert'] + inc_source_issues['update']
-            
+
             elif not self.deep_collection:
                 self.logger.info(
                     "There are not issues to update, insert, or collect nested information for.\n"
@@ -154,7 +154,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 #This might cause problems if staggered.
                 #self.register_task_completion(entry_info, self.repo_id, 'issues')
                 return
-            
+
             if self.deep_collection:
                 source_data = inc_source_issues['all']
 
@@ -173,14 +173,14 @@ class GitHubWorker(WorkerGitInterfaceable):
             stagger=True,insertion_method=pk_source_issues_increment_insert
         )
 
-        #Use the increment insert method in order to do the 
+        #Use the increment insert method in order to do the
         #remaining pages of the paginated endpoint that weren't inserted inside the paginate_endpoint method
-        #empty data is checked for in the method so it's not needed outside of it. 
+        #empty data is checked for in the method so it's not needed outside of it.
         pk_source_issues_increment_insert(source_issues,action_map)
 
         pk_source_issues = self.pk_source_issues
         self.pk_source_issues = []
-        
+
         return pk_source_issues
 
     def issues_model(self, entry_info, repo_id):
@@ -196,18 +196,18 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         pk_source_issues = self._get_pk_source_issues()
         if pk_source_issues:
-            try: 
+            try:
                 self.issue_comments_model(pk_source_issues)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"issue comments model failed on {e}.")
-            try: 
+            try:
                 issue_events_all = self.issue_events_model(pk_source_issues)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"issue events model failed on {e}")
             try:
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
-            except Exception as e: 
-                self.logger.info("issue nested model failed on {e}.")
+            except Exception as e:
+                self.logger.info(f"issue nested model failed on {e}.")
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
@@ -222,8 +222,8 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Get contributors that we already have stored
         #   Set our duplicate and update column map keys (something other than PK) to
         #   check dupicates/needed column updates with
-        # SPG 8/25/2021 -- Making the unique key a natural one. 
-        
+        # SPG 8/25/2021 -- Making the unique key a natural one.
+
         # comment_action_map = {
         #     'insert': {
         #         'source': ['created_at', 'body'],
@@ -241,7 +241,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             inc_issue_comments['insert'] = self.text_clean(inc_issue_comments['insert'], 'body')
 
-            #This is sending empty data to enrich_cntrb_id, fix with check 
+            #This is sending empty data to enrich_cntrb_id, fix with check
             if len(inc_issue_comments['insert']) > 0:
                 inc_issue_comments['insert'] = self.enrich_cntrb_id(
                     inc_issue_comments['insert'], 'user.login', action_map_additions={
@@ -292,7 +292,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                     'data_source': self.data_source,
                     'issue_msg_ref_src_comment_id': comment['id'],
                     'issue_msg_ref_src_node_id': comment['node_id'],
-                    'repo_id': self.repo_id 
+                    'repo_id': self.repo_id
                 } for comment in both_pk_source_comments
             ]
 
@@ -363,8 +363,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 ['id', 'issue_id', 'node_id', 'url', 'actor', 'created_at', 'event', 'commit_id']
             ].to_dict(orient='records')
 
-        #This is sending empty data to enrich_cntrb_id, fix with check 
-        if len(pk_issue_events) > 0:  
+        #This is sending empty data to enrich_cntrb_id, fix with check
+        if len(pk_issue_events) > 0:
             pk_issue_events = self.enrich_cntrb_id(
                 pk_issue_events, 'actor.login', action_map_additions={
                     'insert': {
@@ -374,8 +374,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 }, prefix='actor.'
             )
         else:
-            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")            
-            
+            self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
+
         issue_events_insert = [
             {
                 'issue_event_src_id': event['id'],
@@ -487,7 +487,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 'augur': ['issue_assignee_src_id']
             }
         }
-        
+
         table_values_issue_assignees = self.db.execute(
             s.sql.select(self.get_relevant_columns(self.issue_assignees_table,assignee_action_map))
         ).fetchall()
