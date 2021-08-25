@@ -22,6 +22,8 @@ ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT "fk_pull_request_
 
 ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT "fk_repo_review" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+ALTER TABLE "augur_data"."issue_message_ref" ADD CONSTRAINT "fk_repo_id_fk1" FOREIGN KEY ("repo_id") REFERENCES "augur_data"."repo" ("repo_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 update "augur_operations"."augur_settings" set value = 67 where setting = 'augur_data_version';
 
 
