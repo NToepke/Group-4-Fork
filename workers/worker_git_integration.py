@@ -953,7 +953,7 @@ class WorkerGitInterfaceable(Worker):
             try:
                 self.oauths[0]['rate_limit'] = int(response.headers['X-RateLimit-Remaining'])
                 # self.logger.info("Recieved rate limit from headers\n")
-            except:
+            except Exception as e:
                 self.oauths[0]['rate_limit'] -= 1
                 self.logger.info(f"Headers did not work, had to decrement, with error {e}.")
                 self.logger.info(f"Headers value: {self.oauths.keys()}" )
