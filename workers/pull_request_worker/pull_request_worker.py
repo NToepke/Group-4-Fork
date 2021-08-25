@@ -781,7 +781,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_author_association': review['author_association'],
                 'pr_review_state': review['state'],
                 'pr_review_body': review['body'].encode(encoding='UTF-8',errors='ignore').decode(encoding='UTF-8',errors='ignore') if (
-                    comment['body']
+                    review['body']
                 ) else None,
                 'pr_review_submitted_at': review['submitted_at'] if (
                     'submitted_at' in review
