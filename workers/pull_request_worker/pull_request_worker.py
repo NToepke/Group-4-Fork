@@ -793,7 +793,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_commit_id': review['commit_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id
             } for review in source_reviews_insert if review['user'] and 'login' in review['user']
         ]
 
@@ -862,7 +863,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         review_msg_insert = [
             {
                 'pltfrm_id': self.platform_id,
-                'msg_text': comment['body'],
+                'msg_text': comment['body'].encode(encoding='UTF-8',errors='ignore').decode(encoding='UTF-8',errors='ignore') if (
+                    comment['body']
+                ) else None,
                 'msg_timestamp': comment['created_at'],
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
@@ -914,7 +917,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_review_msg_side': comment['side'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id 
             } for comment in both_pk_source_comments
         ]
 
@@ -1027,7 +1031,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_reviewer_src_id': int(float(reviewer['id'])),
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id 
             } for reviewer in source_reviewers_insert if 'login' in reviewer
         ]
         self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
