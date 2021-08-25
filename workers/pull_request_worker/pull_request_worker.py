@@ -441,7 +441,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_augur_contributor_id': pr['cntrb_id'],
                 'pr_body': pr['body'].encode(encoding='UTF-8',errors='ignore').decode(encoding='UTF-8',errors='ignore') if (
                     pr['body']
-                ) else None,,
+                ) else None,
                 'pr_created_at': pr['created_at'],
                 'pr_updated_at': pr['updated_at'],
                 'pr_closed_at': pr['closed_at'],
