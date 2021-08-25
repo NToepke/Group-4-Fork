@@ -1,9 +1,5 @@
 BEGIN; 
 
-ALTER TABLE "augur_data"."pull_request_message_ref" ADD CONSTRAINT "pr-comment-nk" UNIQUE ("pr_message_ref_src_comment_id", "tool_source");
-
-ALTER TABLE "augur_data"."pull_request_review_message_ref" ADD CONSTRAINT "pr-review-nk" UNIQUE ("pr_review_msg_src_id", "tool_source");
-
 ALTER TABLE "augur_data"."pull_request_reviewers" ADD COLUMN "repo_id" int8;
 
 ALTER TABLE "augur_data"."pull_request_reviews" DROP CONSTRAINT "fk_pull_request_reviews_pull_requests_1";
