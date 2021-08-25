@@ -8,10 +8,6 @@ ALTER TABLE "augur_data"."pull_request_reviews" DROP CONSTRAINT "fk_pull_request
 
 ALTER TABLE "augur_data"."pull_request_reviews" ADD COLUMN "repo_id" int8;
 
-ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT "sourcepr-review-id" UNIQUE ("pr_review_src_id", "tool_source");
-
-COMMENT ON CONSTRAINT "sourcepr-review-id" ON "augur_data"."pull_request_reviews" IS 'Natural Key from Source, plus tool source to account for different platforms like GitHub and gitlab. ';
-
 ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT "fk_pull_request_reviews_contributors_1" FOREIGN KEY ("cntrb_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "augur_data"."pull_request_reviews" ADD CONSTRAINT "fk_pull_request_reviews_pull_requests_1" FOREIGN KEY ("pull_request_id") REFERENCES "augur_data"."pull_requests" ("pull_request_id") ON DELETE RESTRICT ON UPDATE CASCADE;
