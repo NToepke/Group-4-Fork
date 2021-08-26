@@ -56,3 +56,11 @@ else
   echo "scorecard build done"
   cd $CURRENT_DIR
 fi
+
+if [ -f "$HOME/go/bin/scc" ]; then
+  echo " SCC exists! ..."
+else
+  echo "installing boyter/scc for value worker  ..."
+  go get -u github.com/boyter/scc/
+fi
+
