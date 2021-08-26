@@ -621,7 +621,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
                 'pr_message_ref_src_comment_id': comment['id'],
-                'pr_message_ref_src_node_id': comment['node_id']
+                'pr_message_ref_src_node_id': comment['node_id'], 
             } for comment in pr_comments['insert']
         ]
 
@@ -647,7 +647,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'pr_message_ref_src_node_id': comment['node_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
+                'repo_id': self.repo_id 
             } for comment in both_pk_source_comments
         ]
 
@@ -916,7 +917,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id 
+                'repo_id': self.repo_id, 
+                'pull_request_id': self.pull_request_id 
             } for comment in both_pk_source_comments
         ]
 
