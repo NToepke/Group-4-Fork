@@ -50,6 +50,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         #Needs to be an attribute of the class for incremental database insert using paginate_endpoint
         self.pk_source_issues = []
+        self.issue_nested_data_model = []
+
 
         # Run the general worker initialization
         super().__init__(worker_type, config, given, models, data_tables, operations_tables)
@@ -201,13 +203,8 @@ class GitHubWorker(WorkerGitInterfaceable):
         if pk_source_issues:
             try:
                 self.issue_comments_model(pk_source_issues)
-            except Exception as e:
-                self.logger.info(f"issue comments model failed on {e}.")
-            try:
-                issue_events_all = self.issue_events_model(pk_source_issues)
-            except Exception as e:
-                self.logger.info(f"issue events model failed on {e}")
-            try:
+                # Issue events seem less critical at the moment (spg - 8/25/2021)
+                # issue_events_all = self.issue_events_model(pk_source_issues)
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e:
                 self.logger.info(f"issue nested model failed on {e}.")
