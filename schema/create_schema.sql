@@ -68,4 +68,3 @@
 \i schema/generate/63-schema_update_65.sql
 \i schema/generate/64-schema_update_66.sql
 \i schema/generate/65-schema_update_67.sql
-\i schema/generate/66-schema_update_68.sql
