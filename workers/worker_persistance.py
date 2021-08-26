@@ -772,13 +772,15 @@ class Persistant():
                     sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
                         table_name, columns)
                     #This causes the github worker to throw an error with pandas
-                    #cur.copy_expert(sql=sql, file=self.text_clean(s_buf))
-                    # s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    #Setting the s_buf_encoded variable for use in exceptions
+                    #Specifically dealing with saltstack/salt issues
+                    s_buf_encoded = s_buf.read().encode("UTF-8") 
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try: 
                         curs.copy_expert(sql=sql, file=s_buf)
                     except Exception as e: 
                         self.logger.info(f"this is the error: {e}.")
+                        self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
 
 
             df = pd.DataFrame(insert)
