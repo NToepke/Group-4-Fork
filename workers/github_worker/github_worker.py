@@ -203,7 +203,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 issue_events_all = self.issue_events_model(pk_source_issues)
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e:
-                self.logger.info(f"issue nested model failed on {e}.")
+                self.logger.info(f"ERROR: issue nested model failed on {e}.")
 
         # Register this task as completed
         self.register_task_completion(entry_info, self.repo_id, 'issues')
