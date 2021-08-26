@@ -937,6 +937,7 @@ class WorkerGitInterfaceable(Worker):
     def update_gh_rate_limit(self, response, bad_credentials=False, temporarily_disable=False):
         # Try to get rate limit from request headers, sometimes it does not work (GH's issue)
         #   In that case we just decrement from last recieved header count
+        self.logger.info(f"This is the response {response}")
         if bad_credentials and len(self.oauths) > 1:
             self.logger.warning(
                 f"Removing oauth with bad credentials from consideration: {self.oauths[0]}"
@@ -955,8 +956,9 @@ class WorkerGitInterfaceable(Worker):
                 # self.logger.info("Recieved rate limit from headers\n")
             except Exception as e:
                 self.oauths[0]['rate_limit'] -= 1
+                self.logger.info(f"")
                 self.logger.info(f"Headers did not work, had to decrement, with error {e}.")
-                self.logger.info(f"Headers value: {self.oauths.keys()}" )
+                self.logger.info(f"Headers value: {self.oauths[0]}" )
         self.logger.info(
             f"Updated rate limit, you have: {self.oauths[0]['rate_limit']} requests remaining."
         )
