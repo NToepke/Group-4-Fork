@@ -100,48 +100,45 @@ class GitHubWorker(WorkerGitInterfaceable):
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
-            try: 
-                issues_insert = [
-                    {
-                        'repo_id': self.repo_id,
-                        'reporter_id': issue['cntrb_id'],
-                        'pull_request': (
-                            issue['pull_request']['url'].split('/')[-1]
-                            if is_valid_pr_block(issue) else None
-                        ),
-                        'pull_request_id': (
-                            issue['pull_request']['url'].split('/')[-1]
-                            if is_valid_pr_block(issue) else None
-                        ),
-                        'created_at': issue['created_at'],
-                        'issue_title': issue['title'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                            issue['title']
-                        ) else None,
-                       # 'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
-                        'issue_title': issue['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                            issue['body']
-                        ) else None,
-                        'comment_count': issue['comments'],
-                        'updated_at': issue['updated_at'],
-                        'closed_at': issue['closed_at'],
-                        'repository_url': issue['repository_url'],
-                        'issue_url': issue['url'],
-                        'labels_url': issue['labels_url'],
-                        'comments_url': issue['comments_url'],
-                        'events_url': issue['events_url'],
-                        'html_url': issue['html_url'],
-                        'issue_state': issue['state'],
-                        'issue_node_id': issue['node_id'],
-                        'gh_issue_id': issue['id'],
-                        'gh_issue_number': issue['number'],
-                        'gh_user_id': issue['user']['id'],
-                        'tool_source': self.tool_source,
-                        'tool_version': self.tool_version,
-                        'data_source': self.data_source
-                    } for issue in inc_source_issues['insert']
-                ]
-            except Exception e: 
-                self.logger.info(f"This is the error on the issues model {e}.")
+            issues_insert = [
+                {
+                    'repo_id': self.repo_id,
+                    'reporter_id': issue['cntrb_id'],
+                    'pull_request': (
+                        issue['pull_request']['url'].split('/')[-1]
+                        if is_valid_pr_block(issue) else None
+                    ),
+                    'pull_request_id': (
+                        issue['pull_request']['url'].split('/')[-1]
+                        if is_valid_pr_block(issue) else None
+                    ),
+                    'created_at': issue['created_at'],
+                    'issue_title': issue['title'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                        issue['title']
+                    ) else None,
+                   # 'issue_body': issue['body'].replace('0x00', '____') if issue['body'] else None,
+                    'issue_title': issue['body'].encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                        issue['body']
+                    ) else None,
+                    'comment_count': issue['comments'],
+                    'updated_at': issue['updated_at'],
+                    'closed_at': issue['closed_at'],
+                    'repository_url': issue['repository_url'],
+                    'issue_url': issue['url'],
+                    'labels_url': issue['labels_url'],
+                    'comments_url': issue['comments_url'],
+                    'events_url': issue['events_url'],
+                    'html_url': issue['html_url'],
+                    'issue_state': issue['state'],
+                    'issue_node_id': issue['node_id'],
+                    'gh_issue_id': issue['id'],
+                    'gh_issue_number': issue['number'],
+                    'gh_user_id': issue['user']['id'],
+                    'tool_source': self.tool_source,
+                    'tool_version': self.tool_version,
+                    'data_source': self.data_source
+                } for issue in inc_source_issues['insert']
+            ]
 
             if len(inc_source_issues['insert']) > 0 or len(inc_source_issues['update']) > 0:
                 issues_insert_result, issues_update_result = self.bulk_insert(
