@@ -469,7 +469,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for pr in inc_source_prs['insert']
             ]
 
-            #The b_pr_src_id bug comes from here
             if len(inc_source_prs['insert']) > 0 or len(inc_source_prs['update']) > 0:
                 self.bulk_insert(
                     self.pull_requests_table,
@@ -978,10 +977,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         source_labels_insert, _ = self.organize_needed_data(
             labels_all, table_values=table_values_pr_labels, action_map=label_action_map
         )
+
+        # 8/26/2021: Cast pr_src_id as an int because it seems to arrive as a float.
+        self.logger.info(f"INFO : pr_src_id from source id on labels is {label['id']}.")
         labels_insert = [
             {
                 'pull_request_id': label['pull_request_id'],
-                'pr_src_id': label['id'],
+                'pr_src_id': int(label['id']),
                 'pr_src_node_id': label['node_id'],
                 'pr_src_url': label['url'],
                 'pr_src_description': label['name'],
