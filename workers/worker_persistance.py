@@ -37,8 +37,8 @@ class Persistant():
 
     def __init__(self, worker_type, data_tables=[],operations_tables=[]):
 
-        self.db_schema = None 
-        self.helper_schema = None 
+        self.db_schema = None
+        self.helper_schema = None
         self.worker_type = worker_type
         #For database functionality
         self.data_tables = data_tables
@@ -222,7 +222,7 @@ class Persistant():
             self.history_id = self.get_max_id('worker_history', 'history_id', operations_table=True) + 1
         except Exception as e:
             self.logger.info(f"Could not find max id. ERROR: {e}")
-        
+
         #25151
         #self.logger.info(f"Good, passed the max id getter. Max id: {self.history_id}")
 
@@ -741,9 +741,17 @@ class Persistant():
 
         if len(insert) > 0:
 
+            self.logger.info(f"Data item[0]: {insert[0]}")
+            # 
+            # for data_item in insert:
+            #
+            #     self.logger.info("Data item: {}")
+            #
+            #     self.db.execute(table.insert().values())
+
             insert_start_time = time.time()
 
-            ## This is not called right away. Its a method. It needs to be called by something. 
+            ## This is not called right away. Its a method. It needs to be called by something.
 
             # def psql_insert_copy(table, conn, keys, data_iter):
                 """
@@ -762,7 +770,7 @@ class Persistant():
 
             self.logger.info(f"data iterarable: {data_iter}, keys are: {keys}, table is {table}.")
 
-            try: 
+            try:
 
             # if len(insert) > 0:
                 attempts = 0
@@ -784,7 +792,7 @@ class Persistant():
                                 ),
                             update
                         )
-                        
+
                         if increment_counter:
                             self.update_counter += update_result.rowcount
                         self.logger.info(
@@ -818,20 +826,20 @@ class Persistant():
                     #     #This causes the github worker to throw an error with pandas
                     #     #Setting the s_buf_encoded variable for use in exceptions
                     #     #Specifically dealing with saltstack/salt issues
-                    #     s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    #     s_buf_encoded = s_buf.read().encode("UTF-8")
                     #     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
-                    #     try: 
+                    #     try:
                     #         curs.copy_expert(sql=sql, file=s_buf)
                     #         time.sleep(30)
-                    #     except Exception as e: 
+                    #     except Exception as e:
                     #         self.logger.info(f"this is the error: {e}.")
                     #         self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
                     # self.logger.info("Copy Expert Finished")
 
-                except Exception as e: 
-                    self.logger.info(f"copy_expert failed with error {e}.")            
+                except Exception as e:
+                    self.logger.info(f"copy_expert failed with error {e}.")
 
-            # This is the first thing that executes. 
+            # This is the first thing that executes.
 
             self.logger.info("Start Pandas Convert JSON to Pandas dataframe.")
 
@@ -846,7 +854,7 @@ class Persistant():
 
             self.logger.info("This method is initialized the first time the curs.copy_expert above is called in our own psql_insert_copy methdod, which you can see as method in the df.to_sql declaration.")
 
-            # This is basically a method call, which is called for 
+            # This is basically a method call, which is called for
 
             self.logger.info(f"Logging Data Types {df.dtypes}")
 
@@ -892,10 +900,10 @@ class Persistant():
                 **data_point,
                 #field: data_point[field].replace("\x00", "\uFFFD")
                 #self.logger.info(f"Null replaced data point{field:datapoint[field]}")
-                ## trying to use standard python3 method for text cleaning here. 
+                ## trying to use standard python3 method for text cleaning here.
                 # This was after `data_point[field]` for a while as `, "utf-8"` and did not work
-                # Nay, it cause silent errors without insert; or was part of that hot mess. 
-                # field: bytes(data_point[field]).decode("utf-8", "ignore")  
+                # Nay, it cause silent errors without insert; or was part of that hot mess.
+                # field: bytes(data_point[field]).decode("utf-8", "ignore")
                 field: bytes(data_point[field], "utf-8").decode("utf-8", "ignore").replace("\x00", "\uFFFD")
                 #0x00
             } for data_point in data
