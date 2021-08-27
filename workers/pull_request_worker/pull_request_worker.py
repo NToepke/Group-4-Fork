@@ -869,7 +869,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'cntrb_id': comment['cntrb_id'],
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
-                'data_source': self.data_source
+                'data_source': self.data_source,
                 'platform_msg_id': comment['id'],
                 'platform_node_id': comment['node_id']
             } for comment in review_msgs['insert']
