@@ -743,6 +743,8 @@ class Persistant():
 
             insert_start_time = time.time()
 
+            ## This is not called right away. Its a method. It needs to be called by something. 
+
             def psql_insert_copy(table, conn, keys, data_iter):
                 """
                 Execute SQL statement inserting data
@@ -786,18 +788,22 @@ class Persistant():
                         self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
                 self.logger.info("Copy Expert Finished")
 
-            self.logger.info("Pandas data frame insert start.")
+            # This is the first thing that executes. 
+
+            self.logger.info("Start Pandas Convert JSON to Pandas dataframe.")
 
             df = pd.DataFrame(insert)
 
-            time.sleep(60)
+            #time.sleep(60)
 
-            self.logger.info("Pandas data frame insert end.")
+            self.logger.info("End Pandas Convert JSON to Pandas Dataframe... .")
 
             if convert_float_int:
                 df = self._convert_float_nan_to_int(df)
 
-            self.logger.info("pandas to_sql method starting ... ")
+            self.logger.info("This method is initialized the first time the curs.copy_expert above is called in our own psql_insert_copy methdod, which you can see as method in the df.to_sql declaration".)
+
+            # This is basically a method call, which is called for 
 
             df.to_sql(
                 schema = self.db_schema,
@@ -805,7 +811,7 @@ class Persistant():
                 con=self.db,
                 if_exists="append",
                 index=False,
-                method=psql_insert_copy,
+                method=psql_insert_copy, ## This is a call to the curs.sql_expert called above
                 chunksize = 500
             )
 
