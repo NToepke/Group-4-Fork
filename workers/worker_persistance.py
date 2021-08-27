@@ -812,6 +812,8 @@ class Persistant():
 
             # This is basically a method call, which is called for 
 
+            self.logger.info(f"Logging Data Types {df.dtypes}")
+
             df.to_sql(
                 schema = self.db_schema,
                 name=table.name,
