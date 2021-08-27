@@ -778,14 +778,25 @@ class Persistant():
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try: 
                         curs.copy_expert(sql=sql, file=s_buf)
+                        self.logger.info("Copy Expert Running")
+                        sleep(360)
+                        self.logger.info("Copy Expert Finished")
+
                     except Exception as e: 
                         self.logger.info(f"this is the error: {e}.")
                         self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
 
+            self.logger.info("Pandas data frame insert start.")
 
             df = pd.DataFrame(insert)
+
+            self.logger.info("Pandas data frame insert end.")
+
             if convert_float_int:
                 df = self._convert_float_nan_to_int(df)
+
+            self.logger.info("pandas to_sql method starting ... ")
+
             df.to_sql(
                 schema = self.db_schema,
                 name=table.name,
@@ -794,6 +805,11 @@ class Persistant():
                 index=False,
                 method=psql_insert_copy
             )
+
+            sleep(60)
+
+            self.logger.info("pandas to_sql method ended.")
+
             if increment_counter:
                 self.insert_counter += len(insert)
 
