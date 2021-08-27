@@ -790,6 +790,8 @@ class Persistant():
 
             df = pd.DataFrame(insert)
 
+            time.sleep(60)
+
             self.logger.info("Pandas data frame insert end.")
 
             if convert_float_int:
