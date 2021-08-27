@@ -756,6 +756,8 @@ class Persistant():
                 data_iter : Iterable that iterates the values to be inserted
                 """
                 # gets a DBAPI connection that can provide a cursor
+                self.logger.info("Copy Expert Running")
+
                 dbapi_conn = conn.connection
                 with dbapi_conn.cursor() as curs:
                     s_buf = io.StringIO()
@@ -777,14 +779,12 @@ class Persistant():
                     s_buf_encoded = s_buf.read().encode("UTF-8") 
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try: 
-                        self.logger.info("Copy Expert Running")
                         curs.copy_expert(sql=sql, file=s_buf)
-                        sleep(180)
-                        self.logger.info("Copy Expert Finished")
-
+                        time.sleep(180)
                     except Exception as e: 
                         self.logger.info(f"this is the error: {e}.")
                         self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
+                self.logger.info("Copy Expert Finished")
 
             self.logger.info("Pandas data frame insert start.")
 
@@ -806,7 +806,7 @@ class Persistant():
                 method=psql_insert_copy
             )
 
-            sleep(60)
+            time.sleep(60)
 
             self.logger.info("pandas to_sql method ended.")
 
