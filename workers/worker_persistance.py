@@ -745,7 +745,7 @@ class Persistant():
 
             ## This is not called right away. Its a method. It needs to be called by something. 
 
-            def psql_insert_copy(table, conn, keys, data_iter):
+            # def psql_insert_copy(table, conn, keys, data_iter):
                 """
                 Execute SQL statement inserting data
 
@@ -758,42 +758,75 @@ class Persistant():
                 data_iter : Iterable that iterates the values to be inserted
                 """
                 # gets a DBAPI connection that can provide a cursor
-                self.logger.info("Copy Expert Running")
+            self.logger.info("Copy Expert Running")
 
-                self.logger.info(f"data iterarable: {data_iter}, keys are: {keys}, table is {table}.")
+            self.logger.info(f"data iterarable: {data_iter}, keys are: {keys}, table is {table}.")
 
-                try: 
+            try: 
 
-                    dbapi_conn = conn.connection
-                    with dbapi_conn.cursor() as curs:
-                        s_buf = io.StringIO()
-                        writer = csv.writer(s_buf)
-                        writer.writerows(data_iter)
-                        s_buf.seek(0)
+            # if len(insert) > 0:
+                attempts = 0
+                update_start_time = time.time()
+                while attempts < max_attempts:
+                    try:
+                        insert_result = self.db.execute(
+                            table.insert().where(
+                                    eval(
+                                        ' and '.join(
+                                            [
+                                                f"self.{table}_table.c.{key} == bindparam('b_{key}')"
+                                                for key in unique_columns
+                                            ]
+                                        )
+                                    )
+                                ).values(
+                                    {key: key for key in update_columns}
+                                ),
+                            update
+                        )
+                        
+                        if increment_counter:
+                            self.update_counter += update_result.rowcount
+                        self.logger.info(
+                            f"Updated {update_result.rowcount} rows in "
+                            f"{time.time() - update_start_time} seconds"
+                        )
+                        break
+                    except Exception as e:
+                        self.logger.info(f"Warning! Error bulk updating data: {e}")
+                        time.sleep(attempt_delay)
+                    attempts += 1
 
-                        columns = ', '.join('"{}"'.format(k) for k in keys)
-                        if table.schema:
-                            table_name = '{}.{}'.format(table.schema, table.name)
-                        else:
-                            table_name = table.name
+                    # dbapi_conn = conn.connection
+                    # with dbapi_conn.cursor() as curs:
+                    #     s_buf = io.StringIO()
+                    #     writer = csv.writer(s_buf)
+                    #     writer.writerows(data_iter)
+                    #     s_buf.seek(0)
 
-                        # sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-                        #     table_name, columns)
+                    #     columns = ', '.join('"{}"'.format(k) for k in keys)
+                    #     if table.schema:
+                    #         table_name = '{}.{}'.format(table.schema, table.name)
+                    #     else:
+                    #         table_name = table.name
 
-                        sql = f"insert into {table_name} ({columns}) values({s_buf})"
+                    #     # sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
+                    #     #     table_name, columns)
 
-                        #This causes the github worker to throw an error with pandas
-                        #Setting the s_buf_encoded variable for use in exceptions
-                        #Specifically dealing with saltstack/salt issues
-                        s_buf_encoded = s_buf.read().encode("UTF-8") 
-                        #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
-                        try: 
-                            curs.copy_expert(sql=sql, file=s_buf)
-                            time.sleep(30)
-                        except Exception as e: 
-                            self.logger.info(f"this is the error: {e}.")
-                            self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
-                    self.logger.info("Copy Expert Finished")
+                    #     sql = f"insert into {table_name} ({columns}) values({s_buf})"
+
+                    #     #This causes the github worker to throw an error with pandas
+                    #     #Setting the s_buf_encoded variable for use in exceptions
+                    #     #Specifically dealing with saltstack/salt issues
+                    #     s_buf_encoded = s_buf.read().encode("UTF-8") 
+                    #     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
+                    #     try: 
+                    #         curs.copy_expert(sql=sql, file=s_buf)
+                    #         time.sleep(30)
+                    #     except Exception as e: 
+                    #         self.logger.info(f"this is the error: {e}.")
+                    #         self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
+                    # self.logger.info("Copy Expert Finished")
 
                 except Exception as e: 
                     self.logger.info(f"copy_expert failed with error {e}.")            
@@ -823,9 +856,9 @@ class Persistant():
                 con=self.db,
                 if_exists="append",
                 index=False,
-                method=None
-                # method=psql_insert_copy, ## This is a call to the curs.sql_expert called above
-                # chunksize = 500
+                #method=None
+                method=psql_insert_copy, ## This is a call to the curs.sql_expert called above
+                chunksize = 500
             )
 
             time.sleep(60)
