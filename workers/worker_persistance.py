@@ -777,8 +777,11 @@ class Persistant():
                         else:
                             table_name = table.name
 
-                        sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-                            table_name, columns)
+                        # sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
+                        #     table_name, columns)
+
+                        sql = f"insert into {table_name} ({columns}) values({s_buf})"
+
                         #This causes the github worker to throw an error with pandas
                         #Setting the s_buf_encoded variable for use in exceptions
                         #Specifically dealing with saltstack/salt issues
