@@ -805,7 +805,8 @@ class Persistant():
                 con=self.db,
                 if_exists="append",
                 index=False,
-                method=psql_insert_copy
+                method=psql_insert_copy,
+                chunksize = 500
             )
 
             time.sleep(60)
