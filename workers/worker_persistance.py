@@ -760,6 +760,8 @@ class Persistant():
                 # gets a DBAPI connection that can provide a cursor
                 self.logger.info("Copy Expert Running")
 
+                try: 
+
                 dbapi_conn = conn.connection
                 with dbapi_conn.cursor() as curs:
                     s_buf = io.StringIO()
@@ -782,11 +784,14 @@ class Persistant():
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try: 
                         curs.copy_expert(sql=sql, file=s_buf)
-                        time.sleep(180)
+                        time.sleep(30)
                     except Exception as e: 
                         self.logger.info(f"this is the error: {e}.")
                         self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
                 self.logger.info("Copy Expert Finished")
+
+                except Exception as e: 
+                    self.logger.info("copy_expert failed with error {e}.")            
 
             # This is the first thing that executes. 
 
