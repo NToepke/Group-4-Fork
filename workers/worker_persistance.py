@@ -818,7 +818,8 @@ class Persistant():
                 con=self.db,
                 if_exists="append",
                 index=False,
-                method=psql_insert_copy, ## This is a call to the curs.sql_expert called above
+                method='multi',
+                # method=psql_insert_copy, ## This is a call to the curs.sql_expert called above
                 chunksize = 500
             )
 
