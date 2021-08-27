@@ -808,7 +808,7 @@ class Persistant():
             if convert_float_int:
                 df = self._convert_float_nan_to_int(df)
 
-            self.logger.info("This method is initialized the first time the curs.copy_expert above is called in our own psql_insert_copy methdod, which you can see as method in the df.to_sql declaration".)
+            self.logger.info("This method is initialized the first time the curs.copy_expert above is called in our own psql_insert_copy methdod, which you can see as method in the df.to_sql declaration.")
 
             # This is basically a method call, which is called for 
 
