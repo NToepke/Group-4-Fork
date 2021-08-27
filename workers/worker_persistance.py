@@ -760,6 +760,8 @@ class Persistant():
                 # gets a DBAPI connection that can provide a cursor
                 self.logger.info("Copy Expert Running")
 
+                self.logger.info(f"data iterarable: {data_iter}, keys are: {keys}, table is {table}.")
+
                 try: 
 
                 dbapi_conn = conn.connection
@@ -791,7 +793,7 @@ class Persistant():
                 self.logger.info("Copy Expert Finished")
 
                 except Exception as e: 
-                    self.logger.info("copy_expert failed with error {e}.")            
+                    self.logger.info(f"copy_expert failed with error {e}.")            
 
             # This is the first thing that executes. 
 
