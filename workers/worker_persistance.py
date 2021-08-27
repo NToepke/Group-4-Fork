@@ -777,9 +777,9 @@ class Persistant():
                     s_buf_encoded = s_buf.read().encode("UTF-8") 
                     #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
                     try: 
-                        curs.copy_expert(sql=sql, file=s_buf)
                         self.logger.info("Copy Expert Running")
-                        sleep(360)
+                        curs.copy_expert(sql=sql, file=s_buf)
+                        sleep(180)
                         self.logger.info("Copy Expert Finished")
 
                     except Exception as e: 
