@@ -764,33 +764,33 @@ class Persistant():
 
                 try: 
 
-                dbapi_conn = conn.connection
-                with dbapi_conn.cursor() as curs:
-                    s_buf = io.StringIO()
-                    writer = csv.writer(s_buf)
-                    writer.writerows(data_iter)
-                    s_buf.seek(0)
+                    dbapi_conn = conn.connection
+                    with dbapi_conn.cursor() as curs:
+                        s_buf = io.StringIO()
+                        writer = csv.writer(s_buf)
+                        writer.writerows(data_iter)
+                        s_buf.seek(0)
 
-                    columns = ', '.join('"{}"'.format(k) for k in keys)
-                    if table.schema:
-                        table_name = '{}.{}'.format(table.schema, table.name)
-                    else:
-                        table_name = table.name
+                        columns = ', '.join('"{}"'.format(k) for k in keys)
+                        if table.schema:
+                            table_name = '{}.{}'.format(table.schema, table.name)
+                        else:
+                            table_name = table.name
 
-                    sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-                        table_name, columns)
-                    #This causes the github worker to throw an error with pandas
-                    #Setting the s_buf_encoded variable for use in exceptions
-                    #Specifically dealing with saltstack/salt issues
-                    s_buf_encoded = s_buf.read().encode("UTF-8") 
-                    #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
-                    try: 
-                        curs.copy_expert(sql=sql, file=s_buf)
-                        time.sleep(30)
-                    except Exception as e: 
-                        self.logger.info(f"this is the error: {e}.")
-                        self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
-                self.logger.info("Copy Expert Finished")
+                        sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
+                            table_name, columns)
+                        #This causes the github worker to throw an error with pandas
+                        #Setting the s_buf_encoded variable for use in exceptions
+                        #Specifically dealing with saltstack/salt issues
+                        s_buf_encoded = s_buf.read().encode("UTF-8") 
+                        #self.logger.info(f"this is the sbuf_encdoded {s_buf_encoded}")
+                        try: 
+                            curs.copy_expert(sql=sql, file=s_buf)
+                            time.sleep(30)
+                        except Exception as e: 
+                            self.logger.info(f"this is the error: {e}.")
+                            self.logger.info(f"Buffer of ERROR: {s_buf_encoded}")
+                    self.logger.info("Copy Expert Finished")
 
                 except Exception as e: 
                     self.logger.info(f"copy_expert failed with error {e}.")            
