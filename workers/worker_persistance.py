@@ -741,13 +741,13 @@ class Persistant():
 
         if len(insert) > 0:
 
-            self.logger.info(f"Data item[0]: {insert[0]}")
-            #
-            # for data_item in insert:
-            #
-            #     self.logger.info("Data item: {}")
-            #
-                # self.db.execute(table.insert().values())
+            for data_item in insert:
+
+                self.logger.info(f"Data item: {data_item.keys()} and Keys Len: {len()}")
+
+                self.db.execute(table.insert().values(data_item))
+
+            self.logger.info(f"The data was inserted for {table}")
 
         return insert_result, update_result
 
