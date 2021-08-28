@@ -704,6 +704,8 @@ class Persistant():
             f"updates are needed for {table}"
         )
 
+        self.logger.info("Made it to bulk insert");
+
         update_result = None
         insert_result = None
 
