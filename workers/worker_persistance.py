@@ -745,7 +745,7 @@ class Persistant():
 
             for data_item in insert:
 
-                self.logger.info(f"Data item: {data_item.keys()} and Keys Len: {len()}")
+                self.logger.info(f"Data item: {data_item.keys()} and Keys Len: {len(data_item.keys())}")
 
                 self.db.execute(table.insert().values(data_item))
 
