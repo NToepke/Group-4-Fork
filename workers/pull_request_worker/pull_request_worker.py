@@ -541,29 +541,29 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.logger.info("Beginning collection of Pull Requests...\n")
         self.logger.info(f"Repo ID: {self.repo_id}, Git URL: {github_url}\n")
 
-        try: 
+        try:
             pk_source_prs = self._get_pk_source_prs()
-        except Exception as e: 
-            self.logger(f"Pull Requests model failed with {e}.")
+        except Exception as e:
+            self.logger.info(f"Pull Requests model failed with {e}.")
 
         self.write_debug_data(pk_source_prs, 'pk_source_prs')
 
         if pk_source_prs:
-            try: 
+            try:
                 self.pull_request_comments_model()
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"Comments model failed with {e}.")
-            try: 
+            try:
                 self.pull_request_events_model(pk_source_prs)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"PR Events model failed with {e}.")
             try:
                 self.pull_request_reviews_model(pk_source_prs)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"PR Reviews model failed with {e}.")
-            try: 
+            try:
                 self.pull_request_nested_data_model(pk_source_prs)
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"PR Nested Data model failed with {e}.")
 
         self.register_task_completion(self.task_info, self.repo_id, 'pull_requests')
@@ -648,7 +648,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id 
+                'repo_id': self.repo_id
             } for comment in both_pk_source_comments
         ]
 
@@ -919,8 +919,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id #, 
-                # 'pull_request_id': self.pull_request_id 
+                'repo_id': self.repo_id #,
+                # 'pull_request_id': self.pull_request_id
             } for comment in both_pk_source_comments
         ]
 
@@ -1037,7 +1037,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'tool_source': self.tool_source,
                 'tool_version': self.tool_version,
                 'data_source': self.data_source,
-                'repo_id': self.repo_id 
+                'repo_id': self.repo_id
             } for reviewer in source_reviewers_insert if 'login' in reviewer
         ]
         self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
