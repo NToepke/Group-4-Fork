@@ -750,7 +750,7 @@ class Persistant():
                 self.logger.info(f"{increment} of {total} insertions")
                 try:
                     self.db.execute(table.insert().values(data_item))
-                except sqlalchemy.exc.ProgrammingError as e:
+                except s.exc.ProgrammingError as e:
                     self.logger.info(f"Bulk Insert Error: {e}")
 
             self.logger.info(f"The data was inserted for {table}")
