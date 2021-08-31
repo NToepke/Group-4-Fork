@@ -743,11 +743,15 @@ class Persistant():
 
         if len(insert) > 0:
 
+            total = len(insert)
+            increment = 1
             for data_item in insert:
 
-                self.logger.info(f"Data item: {data_item.keys()} and Keys Len: {len(data_item.keys())}")
-
-                self.db.execute(table.insert().values(data_item))
+                self.logger.info(f"{increment} of {total} insertions")
+                try:
+                    self.db.execute(table.insert().values(data_item))
+                except psycopg2.ProgrammingError as e:
+                    self.logger.info(f"Bulk Insert Error: {e}")
 
             self.logger.info(f"The data was inserted for {table}")
 
