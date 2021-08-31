@@ -748,6 +748,7 @@ class Persistant():
             for data_item in insert:
 
                 self.logger.info(f"{increment} of {total} insertions")
+                increment += 1
                 try:
                     self.db.execute(table.insert().values(data_item))
                 except s.exc.ProgrammingError as e:
