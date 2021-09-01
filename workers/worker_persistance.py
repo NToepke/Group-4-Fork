@@ -681,7 +681,7 @@ class Persistant():
 
     def bulk_insert(
         self, table, insert=[], update=[], unique_columns=[], update_columns=[],
-        max_attempts=3, attempt_delay=3, increment_counter=True, convert_float_int=False
+        max_attempts=3, attempt_delay=3, increment_counter=True, convert_float_int=False, indicator="Default"
     ):
         """ Performs bulk inserts/updates of the given data to the given table
 

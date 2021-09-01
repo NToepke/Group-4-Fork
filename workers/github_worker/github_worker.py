@@ -144,7 +144,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 issues_insert_result, issues_update_result = self.bulk_insert(
                     self.issues_table, update=inc_source_issues['update'],
                     unique_columns=action_map['insert']['augur'],
-                    insert=issues_insert, update_columns=action_map['update']['augur']
+                    insert=issues_insert, update_columns=action_map['update']['augur'], indicator= "Issues"
                 )
 
                 source_data = inc_source_issues['insert'] + inc_source_issues['update']
