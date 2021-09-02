@@ -983,6 +983,7 @@ class Persistant():
             return source_pk.to_dict(orient='records')
         except Exception as e: 
             self.logger.info(f"Enrich primary key error {e}.")
+            return source_data
 
 
 
