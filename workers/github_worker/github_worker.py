@@ -267,7 +267,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             ]
 
             self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                unique_columns=comment_action_map['insert']['augur']), indicator="Insert issue comments"
+                unique_columns=comment_action_map['insert']['augur'], indicator="Insert issue comments")
 
             """ ISSUE MESSAGE REF TABLE """
 
