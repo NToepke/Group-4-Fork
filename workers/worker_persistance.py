@@ -833,140 +833,146 @@ class Persistant():
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
     ):
 
-        self.logger.info("Preparing to enrich data.\n")
+        try: 
 
-        if len(source_data) == 0:
-            self.logger.info("There is no source data to enrich.\n")
-            return source_data
+            self.logger.info("Preparing to enrich data.\n")
 
-        source_df = self._add_nested_columns(pd.DataFrame(source_data), gh_merge_fields)
+            if len(source_data) == 0:
+                self.logger.info("There is no source data to enrich.\n")
+                return source_data
 
-        if not in_memory:
+            source_df = self._add_nested_columns(pd.DataFrame(source_data), gh_merge_fields)
 
-            source_pk_columns = list(source_df.columns)
-            source_pk_columns.insert(0, list(table.primary_key)[0].name)
+            if not in_memory:
 
-            (source_table, ), metadata, session = self._setup_postgres_merge(
-                # [self._get_data_set_columns(source_data, gh_merge_fields)]
-                [source_df.to_dict(orient='records')]
-            )
+                source_pk_columns = list(source_df.columns)
+                source_pk_columns.insert(0, list(table.primary_key)[0].name)
 
-            source_pk = pd.DataFrame(
+                (source_table, ), metadata, session = self._setup_postgres_merge(
+                    # [self._get_data_set_columns(source_data, gh_merge_fields)]
+                    [source_df.to_dict(orient='records')]
+                )
 
-                # eval(
-                #     "session.query("
-                #         + ", ".join(
-                #             [
-                #                 f"table.c['{column}']" for column in [list(table.primary_key)[0].name]
-                #                 + augur_merge_fields
-                #             ]
-                #         )
-                #     + ")"
-                # )
-                session.query(
-                    table.c[list(table.primary_key)[0].name],
-                    source_table
+                source_pk = pd.DataFrame(
+
                     # eval(
-                    #     f"table.c['{list(table.primary_key)[0].name}'], "
-                    #     + ", ".join(
-                    #         [
-                    #             f"source_table.c['{column}']" for column in source_pk_columns
-                    #         ]
-                    #     )
+                    #     "session.query("
+                    #         + ", ".join(
+                    #             [
+                    #                 f"table.c['{column}']" for column in [list(table.primary_key)[0].name]
+                    #                 + augur_merge_fields
+                    #             ]
+                    #         )
+                    #     + ")"
                     # )
-                ).join(
-                    source_table,
-                    eval(
-                        ' and '.join(
-                            [
-                                f"table.c['{table_column}'] == source_table.c['{source_column}']"
-                                for table_column, source_column in zip(
-                                    augur_merge_fields, gh_merge_fields
-                                )
-                            ]
+                    session.query(
+                        table.c[list(table.primary_key)[0].name],
+                        source_table
+                        # eval(
+                        #     f"table.c['{list(table.primary_key)[0].name}'], "
+                        #     + ", ".join(
+                        #         [
+                        #             f"source_table.c['{column}']" for column in source_pk_columns
+                        #         ]
+                        #     )
+                        # )
+                    ).join(
+                        source_table,
+                        eval(
+                            ' and '.join(
+                                [
+                                    f"table.c['{table_column}'] == source_table.c['{source_column}']"
+                                    for table_column, source_column in zip(
+                                        augur_merge_fields, gh_merge_fields
+                                    )
+                                ]
+                            )
                         )
-                    )
-                ).all(), columns=source_pk_columns  # gh_merge_fields
-            )
+                    ).all(), columns=source_pk_columns  # gh_merge_fields
+                )
 
-            source_pk = self._eval_json_columns(source_pk)
+                source_pk = self._eval_json_columns(source_pk)
 
-            # source_pk, source_df = self.sync_df_types(
-            #     source_pk, source_df, gh_merge_fields, gh_merge_fields
-            # )
-            # source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
+                # source_pk, source_df = self.sync_df_types(
+                #     source_pk, source_df, gh_merge_fields, gh_merge_fields
+                # )
+                # source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
 
-            self.logger.info("source_pk calculated successfully")
+                self.logger.info("source_pk calculated successfully")
 
-            self._close_postgres_merge(metadata, session)
-            self.logger.info("Done")
+                self._close_postgres_merge(metadata, session)
+                self.logger.info("Done")
 
-        else:
-
-            # s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
-            # s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
-            # s_tuple.__dict__['_type_tuple'] = []
-            # for field in augur_merge_fields:
-            #     s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
-
-            # try:
-            #     primary_keys = self.db.execute(s.sql.select(
-            #             [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-            #         ).where(
-            #             s_tuple.in_(
-
-            #                 list(source_df[gh_merge_fields].itertuples(index=False))
-            #             ))).fetchall()
-            # except psycopg2.errors.StatementTooComplex as e:
-            self.logger.info("Retrieve pk statement too complex, querying all instead " +
-                "and performing partitioned merge.\n")
-            all_primary_keys = self.db.execute(s.sql.select(
-                    [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
-                )).fetchall()
-            self.logger.info("Queried all")
-            all_primary_keys_df = pd.DataFrame(all_primary_keys,
-                columns=augur_merge_fields + [list(table.primary_key)[0].name])
-            self.logger.info("Converted to df")
-
-            source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df,
-                    gh_merge_fields, augur_merge_fields)
-
-            self.logger.info("Synced df types")
-
-            partitions = math.ceil(len(source_df) / 600)#1000)
-            attempts = 0
-            while attempts < 50:
-                try:
-                    source_pk = pd.DataFrame()
-                    self.logger.info(f"Trying {partitions} partitions of new data, {len(all_primary_keys_df)} " +
-                        "pk data points to enrich\n")
-                    for sub_df in numpy.array_split(source_df, partitions):
-                        self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
-                        source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
-                            how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields) ])
-                        self.logger.info(f"source_pk merge: {len(sub_df)} worked\n")
-                    break
-
-                except MemoryError as e:
-                    self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
-                        f"source_pk df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
-                    partitions += 1
-                    attempts += 1
-                # self.logger.info(f"End attempt # {attempts}\n")
-            if attempts >= 50:
-                self.logger.info("Max source_pk merge attempts exceeded, cannot perform " +
-                    "updates on this repo.\n")
             else:
-                self.logger.info(f"Data enrichment successful, length: {len(source_pk)}\n")
 
-            # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+                # s_tuple = s.tuple_([table.c[field] for field in augur_merge_fields])
+                # s_tuple.__dict__['clauses'] = s_tuple.__dict__['clauses'][0].effective_value
+                # s_tuple.__dict__['_type_tuple'] = []
+                # for field in augur_merge_fields:
+                #     s_tuple.__dict__['_type_tuple'].append(table.c[field].__dict__['type'])
 
-            # all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
-            # source_dask_df = dd.from_pandas(source_df, chunksize=1000)
-            # result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
-            #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
-            #     ).to_json(default_handler=str, orient='records'))
-        return source_pk.to_dict(orient='records')
+                # try:
+                #     primary_keys = self.db.execute(s.sql.select(
+                #             [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+                #         ).where(
+                #             s_tuple.in_(
+
+                #                 list(source_df[gh_merge_fields].itertuples(index=False))
+                #             ))).fetchall()
+                # except psycopg2.errors.StatementTooComplex as e:
+                self.logger.info("Retrieve pk statement too complex, querying all instead " +
+                    "and performing partitioned merge.\n")
+                all_primary_keys = self.db.execute(s.sql.select(
+                        [table.c[field] for field in augur_merge_fields] + [table.c[list(table.primary_key)[0].name]]
+                    )).fetchall()
+                self.logger.info("Queried all")
+                all_primary_keys_df = pd.DataFrame(all_primary_keys,
+                    columns=augur_merge_fields + [list(table.primary_key)[0].name])
+                self.logger.info("Converted to df")
+
+                source_df, all_primary_keys_df = self.sync_df_types(source_df, all_primary_keys_df,
+                        gh_merge_fields, augur_merge_fields)
+
+                self.logger.info("Synced df types")
+
+                partitions = math.ceil(len(source_df) / 600)#1000)
+                attempts = 0
+                while attempts < 50:
+                    try:
+                        source_pk = pd.DataFrame()
+                        self.logger.info(f"Trying {partitions} partitions of new data, {len(all_primary_keys_df)} " +
+                            "pk data points to enrich\n")
+                        for sub_df in numpy.array_split(source_df, partitions):
+                            self.logger.info(f"Trying a partition, len {len(sub_df)}\n")
+                            source_pk = pd.concat([ source_pk, sub_df.merge(all_primary_keys_df, suffixes=('','_table'),
+                                how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields) ])
+                            self.logger.info(f"source_pk merge: {len(sub_df)} worked\n")
+                        break
+
+                    except MemoryError as e:
+                        self.logger.info(f"new_data ({sub_df.shape}) is too large to allocate memory for " +
+                            f"source_pk df merge.\nMemoryError: {e}\nTrying again with {partitions + 1} partitions...\n")
+                        partitions += 1
+                        attempts += 1
+                    # self.logger.info(f"End attempt # {attempts}\n")
+                if attempts >= 50:
+                    self.logger.info("Max source_pk merge attempts exceeded, cannot perform " +
+                        "updates on this repo.\n")
+                else:
+                    self.logger.info(f"Data enrichment successful, length: {len(source_pk)}\n")
+
+                # all_primary_keys_df.to_json(path_or_buf='all_primary_keys_df.json', orient='records')
+
+                # all_primary_keys_dask_df = dd.from_pandas(all_primary_keys_df, chunksize=1000)
+                # source_dask_df = dd.from_pandas(source_df, chunksize=1000)
+                # result = json.loads(source_dask_df.merge(all_primary_keys_dask_df, suffixes=('','_table'),
+                #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
+                #     ).to_json(default_handler=str, orient='records'))
+            return source_pk.to_dict(orient='records')
+        except Exception as e: 
+            self.logger.info("Enrich primary key error {e}.")
+
+
 
         # if len(primary_keys) > 0:
         #     primary_keys_df = pd.DataFrame(primary_keys,
