@@ -360,7 +360,7 @@ class WorkerGitInterfaceable(Worker):
               attempts = 0
               contributor = None
               success = False
-              
+
               while attempts < 10:
                 self.logger.info("Hitting endpoint: " + url + " ...\n")
                 try:
@@ -369,14 +369,14 @@ class WorkerGitInterfaceable(Worker):
                   self.logger.info(f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
                   time.sleep(10)
                   continue
-                
+
                 self.update_rate_limit(response,platform=platform)
 
                 try:
                   contributor = response.json()
                 except:
                   contributor = json.loads(json.dumps(response.text))
-                
+
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
@@ -402,9 +402,9 @@ class WorkerGitInterfaceable(Worker):
                 attempts += 1
               if not success:
                 break
-              
 
-              
+
+
 
               self.logger.info(f"Contributor data: {contributor}")
 
@@ -788,7 +788,7 @@ class WorkerGitInterfaceable(Worker):
 
         contributors_insert_result, contributors_update_result = self.bulk_insert(self.contributors_table,
             update=source_contributors['update'], unique_columns=action_map['insert']['augur'],
-            insert=contributors_insert, update_columns=action_map['update']['augur'])
+            insert=contributors_insert, update_columns=action_map['update']['augur'], indicator="Insert contributors during query github contributors")
 
     def query_github_contributors_fast(self, entry_info, repo_id):
         """ Data collection function

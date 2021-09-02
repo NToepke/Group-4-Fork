@@ -267,7 +267,7 @@ class GitHubWorker(WorkerGitInterfaceable):
             ]
 
             self.bulk_insert(self.message_table, insert=issue_comments_insert,
-                unique_columns=comment_action_map['insert']['augur'])
+                unique_columns=comment_action_map['insert']['augur']), indicator="Insert issue comments"
 
             """ ISSUE MESSAGE REF TABLE """
 
@@ -294,7 +294,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             self.bulk_insert(
                 self.issue_message_ref_table, insert=issue_message_ref_insert,
-                unique_columns=['issue_msg_ref_src_comment_id']
+                unique_columns=['issue_msg_ref_src_comment_id'], indicator="Insert issue message ref"
             )
 
         # list to hold contributors needing insertion or update
@@ -390,7 +390,7 @@ class GitHubWorker(WorkerGitInterfaceable):
 
         self.bulk_insert(
             self.issue_events_table, insert=issue_events_insert,
-            unique_columns=event_action_map['insert']['augur']
+            unique_columns=event_action_map['insert']['augur'], indicator="Insert issue events"
         )
 
         return issue_events['all']
@@ -473,7 +473,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         # Closed issues, update with closer id
         self.bulk_insert(
             self.issues_table, update=closed_issue_updates, unique_columns=['issue_id'],
-            update_columns=['cntrb_id']
+            update_columns=['cntrb_id'], indicator="Insert issues in nested data model"
         )
 
         # Issue assignees insertion
@@ -517,7 +517,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         ]
         self.bulk_insert(
             self.issue_assignees_table, insert=assignees_insert,
-            unique_columns=assignee_action_map['insert']['augur']
+            unique_columns=assignee_action_map['insert']['augur'], indicator="Insert into issue assignees"
         )
 
         # Issue labels insertion
@@ -555,7 +555,7 @@ class GitHubWorker(WorkerGitInterfaceable):
         try:
             self.bulk_insert(
                 self.issue_labels_table, insert=labels_insert,
-                unique_columns=label_action_map['insert']['augur']
+                unique_columns=label_action_map['insert']['augur'], indicator="Insert into issue labels"
             )
         except psycopg2.errors.InvalidTextRepresentation as e:
             #If there was an error constructing a type try to redo the insert with a conversion.
@@ -563,5 +563,5 @@ class GitHubWorker(WorkerGitInterfaceable):
             self.bulk_insert(
                 self.issue_labels_table, insert=labels_insert,
                 unique_columns=label_action_map['insert']['augur'],
-                convert_float_int=True
+                convert_float_int=True, indicator="Insert into issue labels after error"
             )

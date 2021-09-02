@@ -307,7 +307,7 @@ class Persistant():
         # Insert data to tables
         for data_table, data in zip(data_tables, data_sets):
             self.bulk_insert(
-                data_table, insert=data, increment_counter=False, convert_float_int=True
+                data_table, insert=data, increment_counter=False, convert_float_int=True, indicator="During set up postgres merge"
             )
 
         session = s.orm.Session(self.db)

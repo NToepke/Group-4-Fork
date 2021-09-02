@@ -473,7 +473,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 self.bulk_insert(
                     self.pull_requests_table,
                     update=inc_source_prs['update'], unique_columns=action_map['insert']['augur'],
-                    insert=prs_insert, update_columns=action_map['update']['augur'], indicator="Pull Requests"
+                    insert=prs_insert, update_columns=action_map['update']['augur'], indicator="Insert into Pull Requests"
                 )
 
                 source_data = inc_source_prs['insert'] + inc_source_prs['update']
@@ -625,7 +625,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in pr_comments['insert']
         ]
 
-        self.bulk_insert(self.message_table, insert=pr_comments_insert)
+        self.bulk_insert(self.message_table, insert=pr_comments_insert, indicator="Insert pr comments")
 
         # PR MESSAGE REF TABLE
 
@@ -652,7 +652,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for comment in both_pk_source_comments
         ]
 
-        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert)
+        self.bulk_insert(self.pull_request_message_ref_table, insert=pr_message_ref_insert, indicator="Insert pull request message ref")
 
     def pull_request_events_model(self, pk_source_prs=[]):
 
@@ -717,7 +717,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             } for event in pk_pr_events if event['actor'] is not None
         ]
 
-        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert)
+        self.bulk_insert(self.pull_request_events_table, insert=pr_events_insert, indicator="Insert pr events")
 
     def pull_request_reviews_model(self, pk_source_prs=[]):
 
@@ -800,7 +800,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         self.bulk_insert(
             self.pull_request_reviews_table, insert=reviews_insert, update=source_reviews_update,
             unique_columns=review_action_map['insert']['augur'],
-            update_columns=review_action_map['update']['augur']
+            update_columns=review_action_map['update']['augur'], indicator="Insert pr reviews"
         )
 
         # Merge source data to inserted data to have access to inserted primary keys
@@ -876,7 +876,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             if comment['user'] and 'login' in comment['user']
         ]
 
-        self.bulk_insert(self.message_table, insert=review_msg_insert)
+        self.bulk_insert(self.message_table, insert=review_msg_insert, indicator="Insert pr message review insert")
 
         # PR REVIEW MESSAGE REF TABLE
 
@@ -926,7 +926,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         self.bulk_insert(
             self.pull_request_review_message_ref_table,
-            insert=pr_review_msg_ref_insert
+            insert=pr_review_msg_ref_insert, indicator="Insert pr review message ref"
         )
 
     def pull_request_nested_data_model(self, pk_source_prs=[]):
@@ -998,7 +998,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'data_source': self.data_source
             } for label in source_labels_insert
         ]
-        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert)
+        self.bulk_insert(self.pull_request_labels_table, insert=labels_insert, indicator="Insert pr labels")
 
         # PR reviewers insertion
         reviewer_action_map = {
@@ -1040,7 +1040,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'repo_id': self.repo_id
             } for reviewer in source_reviewers_insert if 'login' in reviewer
         ]
-        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert)
+        self.bulk_insert(self.pull_request_reviewers_table, insert=reviewers_insert, indicator="Insert pr reviewers")
 
         # PR assignees insertion
         assignee_action_map = {
@@ -1083,7 +1083,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'data_source': self.data_source
             } for assignee in source_assignees_insert if 'login' in assignee
         ]
-        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert)
+        self.bulk_insert(self.pull_request_assignees_table, insert=assignees_insert, indicator="Insert pr assignees")
 
         # PR meta insertion
         meta_action_map = {
@@ -1127,7 +1127,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 'data_source': self.data_source
             } for meta in source_meta_insert if meta['user'] and 'login' in meta['user']
         ]
-        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert)
+        self.bulk_insert(self.pull_request_meta_table, insert=meta_insert, indicator="Insert pr meta")
 
     def query_pr_repo(self, pr_repo, pr_repo_type, pr_meta_id):
         """ TODO: insert this data as extra columns in the meta table """
