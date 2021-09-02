@@ -214,7 +214,7 @@ class Persistant():
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
             except Exception as e:
-                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
+                self.logger.error(f"Error setting attribute for table: {} : {}".format(table, e))
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.logger.info("Trying to find max id of table...")
@@ -364,14 +364,20 @@ class Persistant():
         self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
     ):
 
-        if len(table_values) == 0:
-            return new_data, []
+        try: 
 
-        if len(new_data) == 0:
-            return [], []
+            if len(table_values) == 0:
+                return new_data, []
 
-        need_insertion = pd.DataFrame()
-        need_updates = pd.DataFrame()
+            if len(new_data) == 0:
+                return [], []
+
+            need_insertion = pd.DataFrame()
+            need_updates = pd.DataFrame()
+
+        except Exception as e: 
+
+            self.logger.info(f"table length table values error in organize_needed_data is {e}.")
 
         if not in_memory:
 
@@ -833,6 +839,8 @@ class Persistant():
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
     ):
 
+        self.logger.info(f"table is {table}.")
+
         try: 
 
             self.logger.info("Preparing to enrich data.\n")
@@ -848,10 +856,14 @@ class Persistant():
                 source_pk_columns = list(source_df.columns)
                 source_pk_columns.insert(0, list(table.primary_key)[0].name)
 
+                self.logger.info(f"The source_table is {source_table}")
+
                 (source_table, ), metadata, session = self._setup_postgres_merge(
                     # [self._get_data_set_columns(source_data, gh_merge_fields)]
                     [source_df.to_dict(orient='records')]
                 )
+
+                self.logger.info(f"The source_table is {source_table}.")                
 
                 source_pk = pd.DataFrame(
 
@@ -970,7 +982,7 @@ class Persistant():
                 #     ).to_json(default_handler=str, orient='records'))
             return source_pk.to_dict(orient='records')
         except Exception as e: 
-            self.logger.info("Enrich primary key error {e}.")
+            self.logger.info(f"Enrich primary key error {e}.")
 
 
 
