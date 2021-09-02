@@ -214,7 +214,7 @@ class Persistant():
             try:
                 setattr(self, '{}_table'.format(table), HelperBase.classes[table].__table__)
             except Exception as e:
-                self.logger.error(f"Error setting attribute for table: {} : {}".format(table, e))
+                self.logger.error("Error setting attribute for table: {} : {}".format(table, e))
 
         # Increment so we are ready to insert the 'next one' of each of these most recent ids
         self.logger.info("Trying to find max id of table...")
