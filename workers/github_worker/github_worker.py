@@ -200,7 +200,15 @@ class GitHubWorker(WorkerGitInterfaceable):
         if pk_source_issues:
             try:
                 self.issue_comments_model(pk_source_issues)
+            except Exception as e:
+                self.logger.info(f"ERROR: issue comments model failed on {e}.")
+                
+            try:
                 issue_events_all = self.issue_events_model(pk_source_issues)
+            except Exception as e:
+                self.logger.info(f"ERROR: issue events model failed on {e}.")
+
+            try:
                 self.issue_nested_data_model(pk_source_issues, issue_events_all)
             except Exception as e:
                 self.logger.info(f"ERROR: issue nested model failed on {e}.")
