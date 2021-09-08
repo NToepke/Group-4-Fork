@@ -364,7 +364,7 @@ class Persistant():
         self, new_data, table_values, table_pkey=None, action_map={}, in_memory=True
     ):
 
-        try: 
+        try:
 
             if len(table_values) == 0:
                 return new_data, []
@@ -375,7 +375,7 @@ class Persistant():
             need_insertion = pd.DataFrame()
             need_updates = pd.DataFrame()
 
-        except Exception as e: 
+        except Exception as e:
 
             self.logger.info(f"table length table values error in organize_needed_data is {e}.")
 
@@ -839,9 +839,11 @@ class Persistant():
         self, source_data, table, gh_merge_fields, augur_merge_fields, in_memory=False
     ):
 
+        return source_data
+
         self.logger.info(f"table is {table}.")
 
-        try: 
+        try:
 
             self.logger.info("Preparing to enrich data.\n")
 
@@ -863,7 +865,7 @@ class Persistant():
                     [source_df.to_dict(orient='records')]
                 )
 
-                self.logger.info(f"The source_table is {source_table}.")                
+                self.logger.info(f"The source_table is {source_table}.")
 
                 source_pk = pd.DataFrame(
 
@@ -981,7 +983,7 @@ class Persistant():
                 #     how='inner', left_on=gh_merge_fields, right_on=augur_merge_fields).compute(
                 #     ).to_json(default_handler=str, orient='records'))
             return source_pk.to_dict(orient='records')
-        except Exception as e: 
+        except Exception as e:
             self.logger.info(f"Enrich primary key error {e}.")
             return source_data
 
