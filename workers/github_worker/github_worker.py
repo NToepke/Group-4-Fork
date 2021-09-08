@@ -202,7 +202,7 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.issue_comments_model(pk_source_issues)
             except Exception as e:
                 self.logger.info(f"ERROR: issue comments model failed on {e}.")
-                
+
             try:
                 issue_events_all = self.issue_events_model(pk_source_issues)
             except Exception as e:
@@ -287,18 +287,27 @@ class GitHubWorker(WorkerGitInterfaceable):
                 c_pk_source_comments, self.issues_table, ['issue_url'], ['issue_url']
             )
 
-            issue_message_ref_insert = [
-                {
-                    'issue_id': comment['issue_id'],
-                    'msg_id': comment['msg_id'],
-                    'tool_source': self.tool_source,
-                    'tool_version': self.tool_version,
-                    'data_source': self.data_source,
-                    'issue_msg_ref_src_comment_id': comment['id'],
-                    'issue_msg_ref_src_node_id': comment['node_id'],
-                    'repo_id': self.repo_id
-                } for comment in both_pk_source_comments
-            ]
+            if 'issue_id' in c_pk_source_comments[0]:
+                pass
+            else:
+                self.logger.info("Issue id not present in keys")
+
+            try:
+                issue_message_ref_insert = [
+                    {
+                        'issue_id': comment['issue_id'],
+                        'msg_id': comment['msg_id'],
+                        'tool_source': self.tool_source,
+                        'tool_version': self.tool_version,
+                        'data_source': self.data_source,
+                        'issue_msg_ref_src_comment_id': comment['id'],
+                        'issue_msg_ref_src_node_id': comment['node_id'],
+                        'repo_id': self.repo_id
+                    } for comment in both_pk_source_comments
+                ]
+            except Exception as e:
+                self.logger.info(f"Issue comments model insertion error: {e}")
+
 
             self.bulk_insert(
                 self.issue_message_ref_table, insert=issue_message_ref_insert,
