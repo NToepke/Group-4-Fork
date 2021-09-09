@@ -258,6 +258,8 @@ class GitHubWorker(WorkerGitInterfaceable):
             else:
                 self.logger.info("Contributor enrichment is not needed, no inserts in action map.")
 
+            self.logger.info("Finished contributor enrichment in issue comments model")
+
             issue_comments_insert = [
                 {
                     'pltfrm_id': self.platform_id,
@@ -276,6 +278,8 @@ class GitHubWorker(WorkerGitInterfaceable):
 
             self.bulk_insert(self.message_table, insert=issue_comments_insert,
                 unique_columns=comment_action_map['insert']['augur'], indicator="Insert issue comments")
+
+            self.logger.info("Finished issue_comments insertion in issue comments model")
 
             """ ISSUE MESSAGE REF TABLE """
 
@@ -313,6 +317,8 @@ class GitHubWorker(WorkerGitInterfaceable):
                 self.issue_message_ref_table, insert=issue_message_ref_insert,
                 unique_columns=['issue_msg_ref_src_comment_id'], indicator="Insert issue message ref"
             )
+
+            self.logger.info("Finished issue_comments_ref insertion in issue comments model")
 
         # list to hold contributors needing insertion or update
         issue_comments = self.paginate_endpoint(
