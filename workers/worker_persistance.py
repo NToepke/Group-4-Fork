@@ -984,7 +984,7 @@ class Persistant():
                 source_table
             )
 
-            self.logger.debug(f"Starting data from the session: {pd.DataFrame(query, columns=source_pk_columns).to_string()}")
+            # self.logger.debug(f"Starting data from the session: {pd.DataFrame(query, columns=source_pk_columns).to_string()}")
 
             # Creates list of conditions to join the data on
             # Example: table.c['pr_src_id'] == source_table.c['id']
