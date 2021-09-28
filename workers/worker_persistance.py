@@ -826,16 +826,16 @@ class Persistant():
                         #self.logger.info("message committed")
                         dbapi_conn.commit()
                         # self.logger.debug("good dog. record committed! Watson, come quick!!!")
-                    except psycopg2.errors.UniqueViolation as e: 
+                    except psycopg2.errors.UniqueViolation as e:
                         self.logger.info(f"{e}")
-                        dbapi_conn.rollback()                        
+                        dbapi_conn.rollback()
                     except Exception as e:
                         self.logger.debug(f"Bulk insert error: {e}. exception registered")
                         stacker = traceback.format_exc()
                         self.logger.debug(f"{stacker}")
                         dbapi_conn.rollback()
 
-            try: 
+            try:
                 df = pd.DataFrame(insert)
                 if convert_float_int:
                     df = self._convert_float_nan_to_int(df)
@@ -857,7 +857,7 @@ class Persistant():
                     f"Inserted {len(insert)} rows in {time.time() - insert_start_time} seconds "
                     "thanks to postgresql's COPY FROM CSV! :)"
                 )
-            except Exception as e: 
+            except Exception as e:
                 self.logger.info(f"Bulk insert error 2: {e}. exception registered.")
 
         return insert_result, update_result
@@ -933,11 +933,11 @@ class Persistant():
                 self.logger.debug(f"{stacker}")
                 pass
             except Exception as e:
-                self.logger.debug(f"Looking for nan user error: {e}.") 
+                self.logger.debug(f"Looking for nan user error: {e}.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
-                pass 
-            finally: 
+                pass
+            finally:
                 self.logger.debug(f"exception registered in _add_nested_columns.")
 
 
@@ -973,49 +973,34 @@ class Persistant():
             source_pk_columns.insert(0, list(table.primary_key)[0].name)
 
             (source_table, ), metadata, session = self._setup_postgres_merge(
-                #This next line was commented out, which seems like it might be problematic
-                #    Wouldn't we *want* to have all of this mapping included?
-                #    [self._get_data_set_columns(source_data, gh_merge_fields)]
-                #   However, it does turn out that this line creates the error:
-                    #      2021-09-15 21:44:59,261,261ms [PID: 1942874] workers.github_worker.57631 [ERROR] Traceback (most recent call last):
-                    #   File "/home/sean/github/release-test/workers/worker_base.py", line 180, in collect
-                    #     model_method(message, repo_id)
-                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 199, in issues_model
-                    #     pk_source_issues = self._get_pk_source_issues()
-                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 181, in _get_pk_source_issues
-                    #     pk_source_issues_increment_insert(source_issues,action_map)
-                    #   File "/home/sean/github/release-test/workers/github_worker/github_worker.py", line 166, in pk_source_issues_increment_insert
-                    #     self.pk_source_issues += self.enrich_data_primary_keys(
-                    #   File "/home/sean/github/release-test/workers/worker_persistance.py", line 928, in enrich_data_primary_keys
-                    #     [self._get_data_set_columns(source_data, gh_merge_fields)]
-                    # TypeError: list indices must be integers or slices, not list
+            [source_df.to_dict(orient='records')])
 
-                [source_df.to_dict(orient='records')]
+            list_of_primary_keys = list(table.primary_key)[0].name
+
+            self.logger.debug(f"Primary keys list: {list_of_primary_keys}")
+            self.logger.debug(f"Primary keys list type: {type(list_of_primary_keys)}")
+
+            q = session.query(
+                table.c[list(table.primary_key)[0].name],
+                source_table
             )
+            self.logger.debug(f"Session query before join: {pd.DataFrame(q)}")
+            self.logger.debug(f"Session query before join type: {type(pd.DataFrame(q))}")
+
+            list_of_conditions = [
+                f"table.c['{table_column}'] == source_table.c['{source_column}']"
+                for table_column, source_column in zip(
+                    augur_merge_fields, gh_merge_fields
+                )
+            ]
+            self.logger.debug(f"List of conditions inside join: {list_of_conditions}")
+            self.logger.debug(f"List of conditions inside join type: {type(list_of_conditions)}")
+
 
             source_pk = pd.DataFrame(
-
-                # eval(
-                #     "session.query("
-                #         + ", ".join(
-                #             [
-                #                 f"table.c['{column}']" for column in [list(table.primary_key)[0].name]
-                #                 + augur_merge_fields
-                #             ]
-                #         )
-                #     + ")"
-                # )
                 session.query(
                     table.c[list(table.primary_key)[0].name],
                     source_table
-                    # eval(
-                    #     f"table.c['{list(table.primary_key)[0].name}'], "
-                    #     + ", ".join(
-                    #         [
-                    #             f"source_table.c['{column}']" for column in source_pk_columns
-                    #         ]
-                    #     )
-                    # )
                 ).join(
                     source_table,
                     eval(
@@ -1029,14 +1014,14 @@ class Persistant():
                         )
                     )
                 ).all(), columns=source_pk_columns  # gh_merge_fields
+
+
+
+
             )
 
             source_pk = self._eval_json_columns(source_pk)
 
-            # source_pk, source_df = self.sync_df_types(
-            #     source_pk, source_df, gh_merge_fields, gh_merge_fields
-            # )
-            # source_pk = source_pk.merge(source_df, how='inner', on=gh_merge_fields)
 
             self.logger.info("source_pk calculated successfully")
 
@@ -1059,7 +1044,7 @@ class Persistant():
 
             #                 list(source_df[gh_merge_fields].itertuples(index=False))
             #             ))).fetchall()
-            # except psycopg2.errors.UniqueViolation as e: 
+            # except psycopg2.errors.UniqueViolation as e:
             # except psycopg2.errors.StatementTooComplex as e:
             self.logger.info("Retrieve pk statement too complex, querying all instead " +
                 "and performing partitioned merge.\n")
