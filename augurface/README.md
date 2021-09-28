@@ -1,5 +1,7 @@
 # augurface
 
+**NOTE: This project is currently an alpha release**
+
 ## Project setup
 From the augur root directory, you need to configure a local server that points to the database you want to add repositories to, which will typically be remote. You then need to rebuild development: 
 
