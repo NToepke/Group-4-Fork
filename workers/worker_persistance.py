@@ -975,26 +975,41 @@ class Persistant():
             (source_table, ), metadata, session = self._setup_postgres_merge(
             [source_df.to_dict(orient='records')])
 
+
+            # Gets list of primary keys for the table
             list_of_primary_keys = list(table.primary_key)[0].name
 
-            self.logger.debug(f"Primary keys list: {list_of_primary_keys}")
-            self.logger.debug(f"Primary keys list type: {type(list_of_primary_keys)}")
-
-            q = session.query(
-                table.c[list(table.primary_key)[0].name],
+            query = session.query(
+                table.c[list_of_primary_keys],
                 source_table
             )
-            self.logger.debug(f"Session query before join: {pd.DataFrame(q)}")
-            self.logger.debug(f"Session query before join type: {type(pd.DataFrame(q))}")
 
-            list_of_conditions = [
+            self.logger.debug(f"Starting data from the session: {pd.DataFrame(query, columns=source_pk_columns).to_string()}")
+
+            # Creates list of conditions to join the data on
+            # Example: table.c['pr_src_id'] == source_table.c['id']
+            condition_string_list = [
                 f"table.c['{table_column}'] == source_table.c['{source_column}']"
                 for table_column, source_column in zip(
                     augur_merge_fields, gh_merge_fields
                 )
             ]
-            self.logger.debug(f"List of conditions inside join: {list_of_conditions}")
-            self.logger.debug(f"List of conditions inside join type: {type(list_of_conditions)}")
+            self.logger.debug(f"List of conditions before eval: {condition_string_list}")
+
+            eval_value = eval(
+                ' and '.join(condition_string_list)
+            )
+
+            self.logger.debug(f"List of conditions after eval: {eval_value}")
+
+            # source_pk = pd.DataFrame(
+            #     query.join(
+            #         source_table,
+            #         eval_value
+            #     ).all(), columns=source_pk_columns  # gh_merge_fields
+            # )
+
+
 
 
             source_pk = pd.DataFrame(
