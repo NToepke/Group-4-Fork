@@ -715,8 +715,6 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                         self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
                         # options
-                        # id : pr_src_id
-                        # node_id: pr_src_node_id
                         # created_at: pr_created_at
                         # body: pr_body
 
@@ -725,7 +723,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['id'], ['pr_src_id'])
+                            ['body', 'create_at'], ['pr_body', 'pr_created_at'])
 
                         #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
                         self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
