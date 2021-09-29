@@ -527,6 +527,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             gh_merge_fields = ['id']
             augur_merge_fields = ['pr_src_id']
 
+            self.logger.info("Enriching primary keys for pr id")
+
             self.pk_source_prs += self.enrich_data_primary_keys(source_data, self.pull_requests_table,
                 gh_merge_fields, augur_merge_fields)
             return
@@ -698,10 +700,13 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                 pass
             finally:
                     try:
+
+                        self.logger.info("Enriching primary keys for pr message comments")
+
                         c_pk_source_comments = self.enrich_data_primary_keys(
                             inc_pr_comments['insert'], self.message_table,
                             comment_action_map['insert']['source'],
-                            comment_action_map['insert']['augur'], in_memory=True)
+                            comment_action_map['insert']['augur'])
 
                         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
@@ -709,7 +714,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['issue_url'], ['pr_issue_url'], in_memory=True)
+                            ['issue_url'], ['pr_issue_url'])
 
                         #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
                         self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
@@ -802,8 +807,11 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         #self.write_debug_data(pr_events, 'pr_events')
 
+        self.logger.info("Enriching primary keys for pr events")
+
         pk_pr_events = self.enrich_data_primary_keys(pr_events['insert'],
             self.pull_requests_table, ['issue.url'], ['pr_issue_url'])
+
 
         self.write_debug_data(pk_pr_events, 'pk_pr_events')
 
@@ -939,6 +947,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         gh_merge_fields = ['id']
         augur_merge_fields = ['pr_review_src_id']
 
+        self.logger.info("Enriching primary keys for pr reviews")
+
         both_pr_review_pk_source_reviews = self.enrich_data_primary_keys(
             pr_pk_source_reviews, self.pull_request_reviews_table, gh_merge_fields,
             augur_merge_fields
@@ -1038,6 +1048,9 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         # PR REVIEW MESSAGE REF TABLE
 
+        self.logger.info("Enriching primary keys for pr review message comments")
+
+
         c_pk_source_comments = self.enrich_data_primary_keys(
             review_msgs['insert'], self.message_table, review_msg_action_map['insert']['source'],
             review_msg_action_map['insert']['augur']
@@ -1048,6 +1061,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
         ''' The action map does not apply here because this is a reference to the parent
         table.  '''
 
+        self.logger.info("Enriching primary keys for pr review message pull_request ids")
 
         both_pk_source_comments = self.enrich_data_primary_keys(
             c_pk_source_comments, self.pull_request_reviews_table, ['pull_request_review_id'],
