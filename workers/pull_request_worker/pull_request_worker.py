@@ -714,9 +714,18 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
 
+                        # options
+                        # id : pr_src_id
+                        # node_id: pr_src_node_id
+                        # created_at: pr_created_at
+                        # body: pr_body
+
+                         # {'id': 274174635, 'node_id': 'MDEyOklzc3VlQ29tbWVudDI3NDE3NDYzNQ==', 'created_at': Timestamp('2017-01-20 20:41:31'),
+                         # 'body': "@abuhman Regarding the commands, for right now only 'users' works. Also, a configuration file is required. There is a bug that prevents running it without the config file (which makes it tough to generate a config file!).\r\n\r\n`releases()` is not meant to be called directly. They are mangled by the [Click](http://click.pocoo.org/) decorators so [you have to call them from the Click context](http://click.pocoo.org/6/advanced/)"}
+
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['issue_url'], ['pr_issue_url'])
+                            ['id'], ['pr_src_id'])
 
                         #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
                         self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")
