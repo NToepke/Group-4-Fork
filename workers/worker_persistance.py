@@ -994,8 +994,6 @@ class Persistant():
                     augur_merge_fields, gh_merge_fields
                 )
             ]
-            self.logger.debug(f"List of conditions before eval: {condition_string_list}")
-
             eval_value = eval(
                 ' and '.join(condition_string_list)
             )
@@ -1008,28 +1006,28 @@ class Persistant():
             source_pk = pd.DataFrame(all_data, columns=source_pk_columns)
             self.logger.debug(f"source_pk before _eval_json_columns len: {len(source_pk)}")
 
-            removed_data = pd.DataFrame(
-                session.query(
-                    table.c[list(table.primary_key)[0].name],
-                    source_table
-                ).join(
-                    source_table,
-                    eval(
-                        ' and '.join(
-                            [
-                                f"table.c['{table_column}'] != source_table.c['{source_column}']"
-                                for table_column, source_column in zip(
-                                    augur_merge_fields, gh_merge_fields
-                                )
-                            ]
-                        )
-                    )
-                ).all(), columns=source_pk_columns  # gh_merge_fields
-            )
-
-            self.logger.debug(f"Removed data len: {len(removed_data)}")
-            self.logger.debug(f"Removed data: {removed_data.to_string()}")
-
+            # removed_data = pd.DataFrame(
+            #     session.query(
+            #         table.c[list(table.primary_key)[0].name],
+            #         source_table
+            #     ).join(
+            #         source_table,
+            #         eval(
+            #             ' and '.join(
+            #                 [
+            #                     f"table.c['{table_column}'] != source_table.c['{source_column}']"
+            #                     for table_column, source_column in zip(
+            #                         augur_merge_fields, gh_merge_fields
+            #                     )
+            #                 ]
+            #             )
+            #         )
+            #     ).all(), columns=source_pk_columns  # gh_merge_fields
+            # )
+            #
+            # self.logger.debug(f"Removed data len: {len(removed_data)}")
+            # self.logger.debug(f"Removed data: {removed_data.to_string()}")
+            #
 
 
 
