@@ -708,6 +708,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
                             comment_action_map['insert']['source'],
                             comment_action_map['insert']['augur'])
 
+                        self.logger.info(f"Piece of pr comment data: {c_pk_source_comments[0]}")
+
                         self.write_debug_data(c_pk_source_comments, 'c_pk_source_comments')
 
                         self.logger.info(f"log of the length of c_pk_source_comments {len(c_pk_source_comments)}.")
