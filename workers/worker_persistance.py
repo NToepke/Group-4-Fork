@@ -1005,7 +1005,7 @@ class Persistant():
             all_data = query.join(source_table, eval_value).all()
             self.logger.debug(f"All data len: {len(all_data)}")
 
-            source_pk = pd.DataFrame(all_data, columns=source_pk_columns  # gh_merge_fields)
+            source_pk = pd.DataFrame(all_data, columns=source_pk_columns)
             self.logger.debug(f"source_pk before _eval_json_columns len: {len(source_pk)}")
 
 
