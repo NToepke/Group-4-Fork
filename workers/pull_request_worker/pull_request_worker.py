@@ -646,14 +646,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         comment_action_map = {
             'insert': {
-                'source': ['id'],
+                'source': ['created_at', 'body'],
                 'augur': ['platform_msg_id']
             }
         }
         comment_ref_action_map = {
             'insert': {
-                'source': ['id'],
-                'augur': ['pr_message_ref_src_comment_id']
+                'source': ['created_at', 'body'],
+                'augur': ['msg_timestamp', 'msg_text']
             }
         }
 
@@ -723,7 +723,7 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
                         both_pk_source_comments = self.enrich_data_primary_keys(
                             c_pk_source_comments, self.pull_requests_table,
-                            ['body', 'create_at'], ['pr_body', 'pr_created_at'])
+                            ['issue_url'], ['pr_issue_url'])
 
                         #self.write_debug_data(both_pk_source_comments, 'both_pk_source_comments')
                         self.logger.debug(f"length of both_pk_source_comments: {len(both_pk_source_comments)}")

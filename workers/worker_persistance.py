@@ -994,6 +994,9 @@ class Persistant():
                     augur_merge_fields, gh_merge_fields
                 )
             ]
+
+            self.logger.info(f"List of conditions before eval: {condition_string_list}")
+
             eval_value = eval(
                 ' and '.join(condition_string_list)
             )
