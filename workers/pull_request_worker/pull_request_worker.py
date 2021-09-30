@@ -646,14 +646,14 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         comment_action_map = {
             'insert': {
-                'source': ['created_at', 'body'],
+                'source': ['id'],
                 'augur': ['platform_msg_id']
             }
         }
         comment_ref_action_map = {
             'insert': {
-                'source': ['created_at', 'body'],
-                'augur': ['msg_timestamp', 'msg_text']
+                'source': ['id'],
+                'augur': ['pr_message_ref_src_comment_id']
             }
         }
 
