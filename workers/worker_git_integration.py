@@ -359,9 +359,9 @@ class WorkerGitInterfaceable(Worker):
             #contributor is not in the database
             else:
 
-              self.logger.info("{} not in database, making api call".format(source_data_id))
+              # self.logger.info("{} not in database, making api call".format(source_data_id))
 
-              self.logger.info("login: {}".format(data[f'{prefix}login']))
+              # self.logger.info("login: {}".format(data[f'{prefix}login']))
 
               try:
                 url = ("https://api.github.com/users/" + data[f'{prefix}login'])
@@ -391,7 +391,7 @@ class WorkerGitInterfaceable(Worker):
 
 
                 if type(contributor) == dict:
-                  self.logger.info("Request returned a dict!")
+                  # self.logger.info("Request returned a dict!")
                   # self.logger.info(f"Contributor data: {contributor}")
                   success = True
                   break
