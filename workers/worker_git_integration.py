@@ -108,7 +108,7 @@ class WorkerGitInterfaceable(Worker):
         if 'email' in contributor:
             email = contributor['email']
 
-        ''' Because a user name nan exists, we needed to cast any string where their 
+        ''' Because a user name nan exists, we needed to cast any string where their
             user name appears as a string, because otherwise python was casting it as a float '''
         if platform == 'github':
             cntrb = {
@@ -276,7 +276,7 @@ class WorkerGitInterfaceable(Worker):
         #Filter out bad data where we can't even hit the api.
         source_data = [data for data in source_data if f'{prefix}login' in data and data[f'{prefix}login'] != None]
 
-        self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
+        # self.logger.info(f"table_values_cntrb keys: {table_values_cntrb[0].keys()}")
         # self.logger.info(f"source_data keys: {source_data[0].keys()}")
 
         #We can't use this because of worker collisions
@@ -288,7 +288,7 @@ class WorkerGitInterfaceable(Worker):
 
             #removed this log because it was generating a lot of data.
             #self.logger.info(f"Enriching {index} of {len(source_data)}")
-            self.logger.debug(f"Enriching {len(source_data)} contributors.")
+            # self.logger.debug(f"Enriching {} contributors.")
 
 
             user_unique_ids = []
@@ -308,8 +308,8 @@ class WorkerGitInterfaceable(Worker):
                 self.logger.info("Source data doesn't have user.id. Using node_id instead.")
                 stacker = traceback.format_exc()
                 self.logger.debug(f"{stacker}")
-                pass 
-            finally: 
+                pass
+            finally:
                 for row in table_values_cntrb:
                   try:
                     user_unique_ids.append(row['gh_node_id'])
@@ -341,7 +341,7 @@ class WorkerGitInterfaceable(Worker):
             #if user.id is in the database then there is no need to add the contributor
             if source_data_id in user_unique_ids:
 
-                self.logger.info("{} found in database".format(source_data_id))
+                # self.logger.info("{} found in database".format(source_data_id))
 
                 user_id_row = []
                 try:
@@ -392,7 +392,7 @@ class WorkerGitInterfaceable(Worker):
 
                 if type(contributor) == dict:
                   self.logger.info("Request returned a dict!")
-                  self.logger.info(f"Contributor data: {contributor}")
+                  # self.logger.info(f"Contributor data: {contributor}")
                   success = True
                   break
                 elif type(contributor) == list:
@@ -418,7 +418,7 @@ class WorkerGitInterfaceable(Worker):
 
 
 
-              self.logger.info(f"Contributor data: {contributor}")
+              # self.logger.info(f"Contributor data: {contributor}")
 
               cntrb = {
               "cntrb_login": contributor['login'],
@@ -475,7 +475,7 @@ class WorkerGitInterfaceable(Worker):
               #Handle and log rare failure cases. If this part errors something is very wrong.
               if len(cntrb_id_row) == 1:
                 data['cntrb_id'] = cntrb_id_row[0]['cntrb_id']
-                self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
+                # self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
               elif len(cntrb_id_row) == 0:
                 self.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor that is unable to be inserted into the contributors table but is also not present in that table.")
               else:
