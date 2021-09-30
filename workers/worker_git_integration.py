@@ -354,7 +354,7 @@ class WorkerGitInterfaceable(Worker):
 
                 #assigns the cntrb_id to the source data to be returned to the workers
                 data['cntrb_id'] = user_id_row['cntrb_id']
-                self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
+                # self.logger.info(f"cntrb_id {data['cntrb_id']} found in database and assigned to enriched data")
 
             #contributor is not in the database
             else:
