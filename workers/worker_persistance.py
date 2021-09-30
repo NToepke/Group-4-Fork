@@ -909,6 +909,8 @@ class Persistant():
         # todo: support deeper nests (>1) and only expand necessary columns
         # todo: merge with _get_data_set_columns
 
+        self.logger.debug(f"Df columns at Beginning: {df.columns}")
+
         for column in column_names:
             self.logger.debug(f"column included: {column}.")
             if '.' not in column:
@@ -927,7 +929,9 @@ class Persistant():
             self.logger.debug(f"Df columns: {expanded_column.columns}")
             self.logger.debug(f"Expanded columns: {expanded_column.columns}")
             try:
-                df = df.join(expanded_column)
+                #df = df.join(expanded_column)
+                df = df.merge(expanded_column, how = 'left')
+
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
                 # TODO: Catch this before by only looping unique prefixs?
