@@ -926,11 +926,11 @@ class Persistant():
             ]
             if column not in expanded_column.columns:
                 expanded_column[column] = None
-            self.logger.debug(f"Df columns: {expanded_column.columns}")
+            self.logger.debug(f"Df columns: {df.columns}")
             self.logger.debug(f"Expanded columns: {expanded_column.columns}")
             try:
-                #df = df.join(expanded_column)
-                df = df.merge(expanded_column, how = 'left')
+                df = df.join(expanded_column)
+                # df = df.merge(expanded_column, how = 'left')
 
             except ValueError:
                 # columns already added (happens if trying to expand the same column twice)
