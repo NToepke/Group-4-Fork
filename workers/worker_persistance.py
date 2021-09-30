@@ -924,6 +924,7 @@ class Persistant():
             ]
             if column not in expanded_column.columns:
                 expanded_column[column] = None
+            self.logger.debug(f"Exampled columns: {expanded_column.columns}")
             try:
                 df = df.join(expanded_column)
             except ValueError:
