@@ -547,6 +547,8 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
             insertion_method=pk_source_increment_insert
         )
 
+        self.logger.debug(f"pr len after paginate endpoint: {len(source_prs)}")
+
         # self.logger.info(
         #     f"PR Action map is {pr_action_map} after source_prs. The source_prs are {source_prs}."
         # )
@@ -557,9 +559,15 @@ class GitHubPullRequestWorker(WorkerGitInterfaceable):
 
         pk_source_prs = self.pk_source_prs
 
+        self.logger.debug(f"pr len after assignment: {len(pk_source_prs)}")
+
+
         #This attribute is only needed because paginate endpoint needs to
         #send this data to the child class and this is the easiset way to do that.
         self.pk_source_prs = []
+
+        self.logger.debug(f"pr len before return: {len(pk_source_prs)}")
+
 
         return pk_source_prs
 
