@@ -1,4 +1,3 @@
-
 from workers.worker_persistance import *
 #I figure I can seperate this class into at least three parts.
 #I should also look into the subclass and see what uses what.
@@ -8,7 +7,6 @@ from workers.worker_persistance import *
 #2. Base
 #3. Github/lab 
 # Might be good to seperate the machine learning functionality into its own class too.
-
 
 class Worker(Persistant):
 
@@ -20,14 +18,14 @@ class Worker(Persistant):
         #Construct the persistant functionality for the worker
         super().__init__(worker_type,data_tables,operations_tables)
         self.collection_start_time = None
+
         self._task = None # task currently being worked on (dict)
+        self.worker_type = worker_type
         self._child = None # process of currently running task (multiprocessing process)
         self._queue = Queue() # tasks stored here 1 at a time (in a mp queue so it can translate across multiple processes)
 
         # if we are finishing a previous task, certain operations work differently
         self.finishing_task = False
-        # Update config with options that are general and not specific to any worker
-        self.augur_config = AugurConfig(self._root_augur_dir)
 
         #TODO: consider taking parts of this out for the base class and then overriding it in WorkerGitInterfaceable
         self.config.update({'offline_mode': False})
@@ -72,7 +70,6 @@ class Worker(Persistant):
             with open(f'{name}.json', 'w') as f:
                  json.dump(data, f)
 
-    
     @property
     def results_counter(self):
         """ Property that is returned when the worker's current results_counter is referenced
@@ -162,13 +159,17 @@ class Worker(Persistant):
             # Call method corresponding to model sent in task
             try:
                 model_method = getattr(self, '{}_model'.format(message['models'][0]))
-                #TODO: set this to record exceptions seperatly. This errored and it took a while to figure that ^ wasn't the line that was erroring.
-                self.record_model_process(repo_id, 'repo_info')
             except Exception as e:
                 self.logger.error('Error: {}.\nNo defined method for model: {}, '.format(e, message['models'][0]) +
                     'must have name of {}_model'.format(message['models'][0]))
                 self.register_task_failure(message, repo_id, e)
                 break
+
+            #Better error handling
+            try:
+                self.record_model_process(repo_id, 'repo_info')
+            except Exception as e:
+                self.logger.error('Error: {}. \n Problem recording model process'.format(e))
 
             # Model method calls wrapped in try/except so that any unexpected error that occurs can be caught
             #   and worker can move onto the next task without stopping
@@ -194,6 +195,7 @@ class Worker(Persistant):
                 self.logger.debug("Connecting to broker, attempt {}\n".format(i))
                 if i > 0:
                     time.sleep(10)
+                self.logger.info("broker & port: "+self.config['host_broker']+"  "+self.config['port_broker'])
                 requests.post('http://{}:{}/api/unstable/workers'.format(
                     self.config['host_broker'],self.config['port_broker']), json=self.specs)
                 self.logger.info("Connection to the broker was successful\n")
@@ -397,11 +399,19 @@ class Worker(Persistant):
             'repo_id': repo_id,
             'worker': self.config['id'],
             'job_model': model,
-            'oauth_id': self.oauths[0]['oauth_id'],
+            #'oauth_id': self.oauths[0]['oauth_id'], #messes up with workers that don't have this attribute
             'timestamp': datetime.datetime.now(),
             'status': "Success",
             'total_results': self.results_counter
         }
+
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+        
         self.helper_db.execute(self.worker_history_table.update().where(
             self.worker_history_table.c.history_id==self.history_id).values(task_history))
 
@@ -476,11 +486,19 @@ class Worker(Persistant):
             "repo_id": repo_id,
             "worker": self.config['id'],
             "job_model": task['models'][0],
-            "oauth_id": self.oauths[0]['oauth_id'],
+            #"oauth_id": self.oauths[0]['oauth_id'],
             "timestamp": datetime.datetime.now(),
             "status": "Error",
             "total_results": self.results_counter
         }
+
+        #log oauth if it applies to worker.
+        try:
+            self.oauths
+            task_history['oauth_id'] = self.oauths[0]['oauth_id']
+        except AttributeError:
+            pass
+
         self.helper_db.execute(
             self.worker_history_table.update().where(
                 self.worker_history_table.c.history_id==self.history_id

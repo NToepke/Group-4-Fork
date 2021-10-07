@@ -59,6 +59,13 @@ default_config = {
                 "switch": 0,
                 "repo_group_id": 0
             },
+            "update_org_repositories": {
+                "switch": 1,
+                "repo_group_id": 0,
+                "given": [
+                   "github_url"
+                ]
+        },
             "jobs": [
                 {
                     "delay": 150000,

@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+from conftest import augur_app
 from os import walk, chdir, environ, chmod, path
 import os
 import logging
@@ -13,9 +14,11 @@ import click
 import sqlalchemy as s
 import pandas as pd
 import requests
+import json
 from sqlalchemy import exc
 
 from augur.cli import pass_config, pass_application
+from augur.platform_connector import PlatformConnector
 
 logger = logging.getLogger(__name__)
 
@@ -331,3 +334,240 @@ def check_pgpass_credentials(config):
         else:
             logger.info("Credentials found in $HOME/.pgpass")
 
+@cli.command('update-org-repositories')
+@click.argument('org')
+@pass_application
+def update_org_repositories(augur_app, org):
+    """
+    Add new repositories for specific organization to Augur's database
+    """
+
+    nonArchivedTotalCount = get_non_archived_repos_total_count(augur_app, org)
+    repo_group_id = get_org_id(augur_app, org)
+    existing_repos = get_existing_repos(augur_app, repo_group_id)
+
+    if nonArchivedTotalCount > len(existing_repos):
+        repos = get_all_non_archived_repos(augur_app, org, nonArchivedTotalCount)
+
+        for repo in repos:
+            if repo['node']['name'] not in existing_repos:
+                insert_repo(augur_app, repo['node'], org, repo_group_id)
+
+def insert_repo(augur_app, repo, org, repo_group_id):
+    logger.info("Inserting repo {}".repo['name'])
+    insert_repo_sql = s.sql.text("""
+        INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_path, repo_name, repo_added)
+        VALUES ({}, {}, {}, {}, {})
+    """.format(repo_group_id, '\''+repo['url']+'\'', '\'github.com/'+org+'/\'', '\''+repo['name']+'\'', '\''+repo['createdAt']+'\''))
+
+    augur_app.database.execute(insert_repo_sql)
+    return
+
+def get_value_from_fetch_data(data):
+    return data[0]
+
+def get_existing_repos(augur_app, repo_group_id):
+    repos_sql = s.sql.text("""
+            SELECT repo_name FROM repo
+            WHERE repo_group_id = '{}' AND repo_archived = 0
+        """.format(repo_group_id))
+
+    repos = augur_app.database.execute(repos_sql).fetchall()
+
+    if len(repos) == 0:
+        logger.info("Did not find any repositories stored in augur_database for repo_group_id {}\n".format(repo_group_id))
+
+    repos_list = list(map(get_value_from_fetch_data, repos))
+
+    return repos_list
+
+def get_org_id(augur_app, org):
+    org_id_sql = s.sql.text("""
+            SELECT repo_group_id FROM repo_groups
+            WHERE rg_name = '{}'
+        """.format(org))
+
+    org_id = augur_app.database.execute(org_id_sql).fetchone()[0]
+    if type(org_id) != int:
+        logger.info("Failed to get organization id from org {}".format(org))
+    return org_id
+
+def get_all_non_archived_repos(augur_app, org, totalCount):
+    maxCount = 100
+    nodes = []
+    after = ""
+
+    while totalCount > maxCount or totalCount <= maxCount and totalCount > 0:
+        totalCount = totalCount - maxCount
+        query = """
+        {
+            repos: search(query: "user:%s archived:false", type: REPOSITORY, first:  %d%s) {
+                edges {
+                    node {
+       					... on Repository {
+                            id
+                            name
+                            nameWithOwner
+                            url
+                            createdAt
+                        }
+                    }
+                    cursor
+                }
+            }
+        }
+        """ % (org, maxCount, after)
+
+        data = get_data(augur_app, query, org)
+        if 'data' not in data:
+            logger.info("Could not get a list of all repositories. 'data' is missing in: {}\n".format(data))
+        if 'repos' not in data['data']:
+            logger.info("Could not get a list of all repositories. 'repos' is missing in: {}\n".format(data))
+        if 'edges' not in data['data']['repos']:
+            logger.info("Could not get a list of all repositories. 'edges' is missing in: {}\n".format(data))
+
+        nodes = nodes + data['data']['repos']['edges']
+
+        l = len(data['data']['repos']['edges'])
+        last_el = data['data']['repos']['edges'][l-1]
+        after = ", after: \"" + last_el['cursor'] + "\""
+
+    data['data']['repos']['edges'] = nodes
+
+    return data['data']['repos']['edges']
+
+def get_all_repos(augur_app, org, totalCount):
+    maxCount = 100
+    nodes = []
+    after = ""
+
+    while totalCount > maxCount or totalCount <= maxCount and totalCount > 0:
+        totalCount = totalCount - maxCount
+        query = """
+        {
+            organization(login: "%s") {
+                repositories(first: %d%s) {
+                    edges {
+                        node {
+                            id
+                            name
+                            nameWithOwner
+                            url
+                            createdAt
+                        }
+                        cursor
+                    }
+                }
+            }
+        }
+        """ % (org, maxCount, after)
+
+        data = get_data(augur_app, query, org)
+        if 'data' not in data:
+            logger.info("Could not get a list of all repositories. 'data' is missing in: {}\n".format(data))
+        if 'organization' not in data['data']:
+            logger.info("Could not get a list of all repositories. 'organization' is missing in: {}\n".format(data))
+        if 'repositories' not in data['data']['organization']:
+            logger.info("Could not get a list of all repositories. 'repositories' is missing in: {}\n".format(data))
+        if 'edges' not in data['data']['organization']['repositories']:
+            logger.info("Could not get a list of all repositories. 'edges' is missing in: {}\n".format(data))
+
+        nodes = nodes + data['data']['organization']['repositories']['edges']
+
+        l = len(data['data']['organization']['repositories']['edges'])
+        last_el = data['data']['organization']['repositories']['edges'][l-1]
+        after = ", after: \"" + last_el['cursor'] + "\""
+
+    data['data']['organization']['repositories']['edges'] = nodes
+
+    return data['data']['organization']['repositories']['edges']
+
+
+def get_non_archived_repos_total_count(augur_app, org):
+    query = """
+    {
+        repos: search(query: "user:%s archived:false", type: REPOSITORY) {
+                repositoryCount
+        }
+    }
+    """ % (org)
+
+    data = get_data(augur_app, query, org)
+
+    return data['data']['repos']['repositoryCount']
+
+def get_repos_total_count(org, augur_app):
+    query = """
+    {
+        organization(login: "%s") {
+            repositories(first: 1) {
+                totalCount
+            }
+        }
+    }
+    """ % (org)
+
+    data = get_data(augur_app, query, org)
+
+    return data['data']['organization']['repositories']['totalCount']
+
+def get_data(augur_app, query, org):
+
+    # Hit the graphql endpoint and retry 3 times in case of failure
+    pc = PlatformConnector()
+    pc.logger = logging.getLogger()
+    pc.db = augur_app.db
+    pc.helper_db = augur_app.helper_db
+    pc.init_oauth_keys()
+
+    url = 'https://api.github.com/graphql'
+    ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    num_attempts = 0
+    success = False
+    data = None
+    while num_attempts < 3:
+        logger.info("Hitting endpoint: {} ...\n".format(url))
+        r = requests.post(url, json={'query': query}, headers=pc.headers)
+        pc.update_gh_rate_limit(pc, r)
+
+        try:
+            data = r.json()
+        except:
+            data = json.loads(json.dumps(r.text))
+
+        if 'errors' in data:
+            logger.info("Error!: {}".format(data['errors']))
+            if data['errors'][0]['message'] == 'API rate limit exceeded':
+                logger.info("Error: Exceeded rate limit for query {}\n".format(query))
+                pc.update_gh_rate_limit(pc, r)
+                continue
+
+        if 'data' in data:
+            success = True
+            if 'organization' not in data:
+                logger.info("Github response does not contain organization {}\n".format(data))
+                break
+            data = data['data']['organization']
+            if 'repositories' not in data:
+                logger.info("Repositories data not provided for organization {}\n".format(org))
+                break
+            data = data['repositories']
+            break
+        else:
+            logger.info("Request returned a non-data dict: {}\n".format(data))
+            if data['message'] == 'Not Found':
+                logger.info("Github repo was not found or does not exist for endpoint: {}\n".format(url))
+                break
+            if data['message'] == 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.\n':
+                pc.update_gh_rate_limit(pc, r, temporarily_disable=True)
+                continue
+            if data['message'] == 'Bad credentials\n':
+                pc.update_gh_rate_limit(pc, r, bad_credentials=True)
+                continue
+        num_attempts += 1
+    if not success:
+        logger.error('Cannot hit endpoint after 3 attempts.\n')
+        return
+
+    return data
