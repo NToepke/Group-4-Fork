@@ -465,11 +465,15 @@ def create_routes(server):
             row_3.append(chart_plot)
             row_4.append(caption_plot)
 
-    def get_new_cntrb_bar_chart_query_params():
+    def get_cntrb_query_related_query_params(is_pie_chart=False):
 
-        group_by = str(request.args.get('group_by', "quarter"))
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
+
+        if is_pie_chart:
+            return required_contributions, required_time
+
+        group_by = str(request.args.get('group_by', "quarter"))
 
         return group_by, required_contributions, required_time
 
@@ -512,7 +516,7 @@ def create_routes(server):
             df = df.loc[df[col].isnull() == False]
 
         if total_rows_removed > 0:
-            print(f"\nTotal rows removed because of null data: {total_rows_removed}");
+            print(f"\nTotal rows removed because of null data: {total_rows_removed}")
         else:
             print("No null data found")
 
@@ -566,21 +570,29 @@ def create_routes(server):
             print("Developer error, not null columns should be a subset of needed columns")
             return df
 
+    def get_dfs_for_new_contributors_bar_charts(input_df, start_date, required_contributions, required_time):
+
+        all_df = remove_rows_before_start_date(input_df, start_date)
+
+        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
+                                                                                required_time, start_date)
+        return all_df, drive_by_df, repeats_df
+
     @server.app.route('/{}/contributor_reports/new_contributors_bar/'.format(server.api_version), methods=["GET"])
     def new_contributors_bar():
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
+        group_by, required_contributions, required_time = get_cntrb_query_related_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
 
         # TODO remove full_name from data for all charts since it is not needed in vis generation
-        not_null_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
-                            'rank', 'yearmonth', 'new_contributors', 'quarter']
+        needed_columns = ['cntrb_id', 'created_at', 'month', 'year', 'repo_id', 'repo_name', 'login', 'action',
+                          'rank', 'yearmonth', 'new_contributors', 'quarter']
 
-        input_df = remove_rows_with_null_values(input_df, not_null_columns)
+        input_df = filter_data(input_df, needed_columns)
 
         if len(input_df) == 0:
             return Response(response="There is no data for this repo, in the database you are accessing",
@@ -594,10 +606,8 @@ def create_routes(server):
 
         row_1, row_2, row_3, row_4 = [], [], [], []
 
-        all_df = remove_rows_before_start_date(input_df, start_date)
-
-        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
-                                                                                required_time, start_date)
+        all_df, drive_by_df, repeats_df = get_dfs_for_new_contributors_bar_charts(input_df, start_date,
+                                                                                  required_contributions, required_time)
 
         for rank in ranks:
             for contributor_type in contributor_types:
@@ -736,7 +746,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by, required_contributions, required_time = get_new_cntrb_bar_chart_query_params()
+        group_by, required_contributions, required_time = get_cntrb_query_related_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -758,11 +768,8 @@ def create_routes(server):
 
         row_1, row_2, row_3, row_4 = [], [], [], []
 
-        all_df = remove_rows_before_start_date(input_df, start_date)
-
-        drive_by_df, repeats_df = compute_fly_by_and_returning_contributors_dfs(input_df, required_contributions,
-                                                                                required_time, start_date)
-
+        all_df, drive_by_df, repeats_df = get_dfs_for_new_contributors_bar_charts(input_df, start_date,
+                                                                                  required_contributions, required_time)
         for rank in ranks:
             for contributor_type in contributor_types:
                 # do not display these visualizations since drive-by's do not have second contributions,
@@ -934,8 +941,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        required_contributions = int(request.args.get('required_contributions', 4))
-        required_time = int(request.args.get('required_time', 365))
+        required_contributions, required_time = get_cntrb_query_related_query_params(is_pie_chart=True)
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
 
@@ -1061,9 +1067,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by = str(request.args.get('group_by', "quarter"))
-        required_contributions = int(request.args.get('required_contributions', 4))
-        required_time = int(request.args.get('required_time', 365))
+        group_by, required_contributions, required_time = get_cntrb_query_related_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
