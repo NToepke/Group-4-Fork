@@ -433,6 +433,24 @@ def create_routes(server):
         return caption_plot
 
     def format_new_cntrb_bar_charts(plot, rank, group_by_format_string):
+        """Format the new contributor bar charts
+
+        Parameters
+        -- plot
+            description: Bokeh plot that is being formatted
+            type: Bokeh Plot
+
+        -- rank
+            description: Used to determine how to label the y axis. This represents the rank of contributors that the
+            plot is representing. An example is (rank =1) then it is showing data for first time contributors.
+            type: integer
+
+        -- group_by_format_string
+            description: String to display how the data is being grouped in the chart. It is used for the x axis label
+
+        Return Value
+            -- Formatted Bokeh Plot
+        """
 
         plot.xgrid.grid_line_color = None
         plot.y_range.start = 0
@@ -465,19 +483,45 @@ def create_routes(server):
             row_3.append(chart_plot)
             row_4.append(caption_plot)
 
-    def get_cntrb_query_related_query_params(is_pie_chart=False):
+    def get_cntrb_query_related_query_params(include_group_by=False):
+        """Remove data before a given date based on the column yearmonth in the dataframe
+
+        Parameters
+        -- include_group_by
+            description: Determines wether group_by is included, this is for the pie chart which does not need to
+            group the data by anything
+            type: boolean
+            Default: False (since most graphs need the group_by variable)
+
+        Return Value
+            -- Tuple of query params in the order (required_contributions, required_time, group_by)
+        """
 
         required_contributions = int(request.args.get('required_contributions', 4))
         required_time = int(request.args.get('required_time', 365))
 
-        if is_pie_chart:
+        if include_group_by:
             return required_contributions, required_time
 
         group_by = str(request.args.get('group_by', "quarter"))
 
-        return group_by, required_contributions, required_time
+        return required_contributions, required_time, group_by
 
     def remove_rows_before_start_date(df, start_date):
+        """Remove data before a given date based on the column yearmonth in the dataframe
+
+        Parameters
+        -- df
+            description: the dataframe that will be modified
+            type: Pandas Dataframe
+
+        -- start_date
+            description: cutoff of for how recent data must be
+            type: date
+
+        Return Value
+            -- Dataframe with only rows that have a yearmonth greater than or equal to the start_date paramater
+        """
 
         mask = (df['yearmonth'] < start_date)
         result_df = df[~df['cntrb_id'].isin(df.loc[mask]['cntrb_id'])]
@@ -583,7 +627,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by, required_contributions, required_time = get_cntrb_query_related_query_params()
+        required_contributions, required_time, group_by = get_cntrb_query_related_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -746,7 +790,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by, required_contributions, required_time = get_cntrb_query_related_query_params()
+        required_contributions, required_time, group_by = get_cntrb_query_related_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
@@ -941,7 +985,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        required_contributions, required_time = get_cntrb_query_related_query_params(is_pie_chart=True)
+        required_contributions, required_time = get_cntrb_query_related_query_params(include_group_by=True)
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
 
@@ -1067,7 +1111,7 @@ def create_routes(server):
 
         repo_id, start_date, end_date = get_repo_id_start_date_and_end_date()
 
-        group_by, required_contributions, required_time = get_cntrb_query_related_query_params()
+        required_contributions, required_time, group_by = get_cntrb_query_related_query_params()
 
         input_df = new_contributor_data_collection(repo_id=repo_id, required_contributions=required_contributions)
         months_df = months_data_collection(start_date=start_date, end_date=end_date)
