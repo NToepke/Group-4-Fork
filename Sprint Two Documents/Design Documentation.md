@@ -15,9 +15,9 @@ These where found to be lacking by both our team and others to get a working ins
 **Common Issues**  
 Addition of a 'Common Issues' section that documents various issues that users may experience and how to fix them.
 ## Potential Documentation Segments to Add
-[Testing](https://oss-augur.readthedocs.io/en/main/development-guide/testing/toc.html) section under **Development Guide**
-[Create a Metric](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/toc.html) section under **Development Guide**
-[Make Commands](https://oss-augur.readthedocs.io/en/main/development-guide/make/toc.html) section under **Development Guide**
+[Testing](https://oss-augur.readthedocs.io/en/main/development-guide/testing/toc.html) section under **Development Guide**  
+[Create a Metric](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/toc.html) section under **Development Guide**  
+[Make Commands](https://oss-augur.readthedocs.io/en/main/development-guide/make/toc.html) section under **Development Guide**  
 ## Formatring Example
 
 ## Example Header
