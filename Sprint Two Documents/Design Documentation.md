@@ -10,4 +10,14 @@ We also decided that we should agree on some form of consistent formatting. Beca
 
 ## Formatring Example
 
-(insert example formatting)
+###Example Header
+
+-Step by step instruction to be given in bulleted list format
+-Any comands to be used by the user will be formated in the following maner 
+> Example command line command
+
+##Example Sub-header
+
+-More example steps to be completed by user
+-Last example of a step to be completed by user including another code block
+> Second example of command line command formatting
