@@ -5,14 +5,14 @@ With our project focusing mostly on documentation and not on software that can b
 We also decided that we should agree on some form of consistent formatting. Because we did not plan to change all the documentation for the project but only to focus on the documentation we found to be insufficient, we decided it would be best if we attempted to mimic the formatting of the existing documentation of Augur.
 
 ## Documentation Segments to Change
-**Dead Links**  
+### Dead Links
 There are occasional dead links in the documentation that we plan to revive.  
 [Unified Data Model](https://oss-augur.readthedocs.io/en/main/schema/data-model.html)
 
-**Installation Instructions**  
+### Installation Instructions
 These were found to be lacking by both our team and others to get a working instance of Augur, our goal will be to figure out how to make the process more clear
 
-**Common Issues**  
+### Common Issues
 Addition of a 'Common Issues' section that documents various issues that users may experience and how to fix them.
 ## Potential Documentation Segments to Finish
 [Testing](https://oss-augur.readthedocs.io/en/main/development-guide/testing/toc.html) section under **Development Guide**  
