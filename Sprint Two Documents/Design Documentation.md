@@ -10,7 +10,7 @@ There are occasional dead links in the documentation that we plan to revive.
 [Unified Data Model](https://oss-augur.readthedocs.io/en/main/schema/data-model.html)
 
 **Installation Instructions**  
-These where found to be lacking by both our team and others to get a working instance of Augur, our goal will be to figure out how to make the process more clear
+These were found to be lacking by both our team and others to get a working instance of Augur, our goal will be to figure out how to make the process more clear
 
 **Common Issues**  
 Addition of a 'Common Issues' section that documents various issues that users may experience and how to fix them.
@@ -18,7 +18,7 @@ Addition of a 'Common Issues' section that documents various issues that users m
 [Testing](https://oss-augur.readthedocs.io/en/main/development-guide/testing/toc.html) section under **Development Guide**  
 [Create a Metric](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/toc.html) section under **Development Guide**  
 [Make Commands](https://oss-augur.readthedocs.io/en/main/development-guide/make/toc.html) section under **Development Guide**  
-## Formatring Example
+## Formatting Example
 
 ## Example Header
 - Step by step instruction to be given in bulleted list format
