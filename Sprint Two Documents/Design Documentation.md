@@ -9,6 +9,8 @@ We also decided that we should agree on some form of consistent formatting. Beca
 There are occasional dead links in the documentation that we plan to revive.  
 (Unified Data Model) https://oss-augur.readthedocs.io/en/main/schema/data-model.html
 
+**Installation Instructions**
+These where found to be lackign by both our team and others to get a working instance of Augur, our goal will be to figure out how to make the process more clear
 ## Documentation Segments to Add
 
 ## Formatring Example
