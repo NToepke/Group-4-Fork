@@ -10,13 +10,13 @@ We also decided that we should agree on some form of consistent formatting. Beca
 
 ## Formatring Example
 
-### Example Header
+## Example Header
 
 - Step by step instruction to be given in bulleted list format
 - Any comands to be used by the user will be formated in the following maner 
 > Example command line command
 
-## Example Sub-header
+### Example Sub-header
 
 - Example of a [link](https://oss-augur.readthedocs.io/en/main/quick-start.html) to another file and or external source (this one leads to the docs the formatting was based uppon)
 - Last example of a step to be completed by user including another code block
