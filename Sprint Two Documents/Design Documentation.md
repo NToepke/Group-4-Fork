@@ -11,7 +11,6 @@ We also decided that we should agree on some form of consistent formatting. Beca
 ## Formatring Example
 
 ## Example Header
-
 - Step by step instruction to be given in bulleted list format
 - Any comands to be used by the user will be formated in the following maner 
 > Example command line command
