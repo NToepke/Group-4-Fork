@@ -5,7 +5,7 @@ With our project focusing mostly on documentation and not on software that can b
 We also decided that we should agree on some form of consistent formatting. Because we did not plan to change all the documentation for the project but only to focus on the documentation we found to be insufficient, we decided it would be best if we attempted to mimic the formatting of the existing documentation of Augur.
 
 ## Documentation Segments to Change
-Dead Links  
+**Dead Links**  
 There are occasional dead links in the documentation that we plan to revive.  
 (Unified Data Model) https://oss-augur.readthedocs.io/en/main/schema/data-model.html
 
