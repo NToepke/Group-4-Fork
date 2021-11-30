@@ -15,7 +15,7 @@ These where found to be lackign by both our team and others to get a working ins
 **Common Issues**  
 Addition of a 'Common Issues' section that documents various issues that users may experience and how to fix them.
 ## Documentation Segments to Add
-
+[Testing](https://oss-augur.readthedocs.io/en/main/development-guide/testing/toc.html) section under **Development Guide**
 ## Formatring Example
 
 ## Example Header
