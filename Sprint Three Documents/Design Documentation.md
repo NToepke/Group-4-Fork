@@ -15,7 +15,7 @@ We also decided that we should agree on some form of consistent formatting. Beca
 ### Creating an Augur API endpoint
 API endpoints can be created for Augur to allow for communication to other systems.
 The general structure of an API endpoint consists of 
-- grabbing data through a query from a system such as SQL
+- Creating queries to grab data from a database system such as [SQL](https://www.w3schools.com/sql/sql_syntax.asp)
 - returning data
 
 Example API endpoints can be found in the documentation [Here](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/metrics-steps.html#example-query-to-get-us-started-on-a-labor-effort-and-cost-endpoint) and [Here](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/metrics-steps.html)  
