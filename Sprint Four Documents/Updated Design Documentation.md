@@ -22,6 +22,7 @@ The general structure of an API endpoint consists of
 - Creating queries to grab data from a database system such as [SQL](https://www.w3schools.com/sql/sql_syntax.asp)
 - returning data
 
-Example API endpoints can be found in the documentation [Here](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/metrics-steps.html#example-query-to-get-us-started-on-a-labor-effort-and-cost-endpoint) and [Here](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/metrics-steps.html)  
+Example API endpoints can be found in the documentation [Here](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/metrics-steps.html#example-query-to-get-us-started-on-a-labor-effort-and-cost-endpoint)
 Documentation on Augur Metrics APIs endpoints can be found [Here](https://oss-augur.readthedocs.io/en/main/development-guide/create-a-metric/api-development.html)  
 The source code directories relating to Augur Metric API endpoints can be found [Here](https://github.com/chaoss/augur/tree/main/augur/metrics)
+
